@@ -1,0 +1,6 @@
+.idea
+.github
+build
+node_modules
+public
+env
