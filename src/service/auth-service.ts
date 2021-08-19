@@ -2,6 +2,7 @@ import { Request } from 'express';
 import { Issuer, Client } from 'openid-client';
 import { logger } from '../logger';
 import { JWKS } from '../utils/auth-utils';
+import urljoin from 'url-join';
 
 export async function createIssuer(discoveryUrl: string): Promise<Issuer<Client>> {
 	return Issuer.discover(discoveryUrl);
@@ -30,7 +31,7 @@ export const isTokenValid = (token: any): boolean => {
 	return false;
 };
 
-export const createRedirectUrl = (applicationUrl: string, redirectUrl: string | undefined): string => {
+export const createUserRedirectUrl = (applicationUrl: string, redirectUrl: string | undefined): string => {
 	if (!redirectUrl) {
 		return applicationUrl;
 	} else if (redirectUrl.startsWith(applicationUrl)) {
@@ -41,6 +42,10 @@ export const createRedirectUrl = (applicationUrl: string, redirectUrl: string | 
 	}
 };
 
+export const createLoginRedirectUrl = (applicationUrl: string, callbackPath: string): string => {
+	return urljoin(applicationUrl, callbackPath);
+};
+
 export const getRedirectUriFromQuery = (applicationUrl: string, request: Request) =>
-	createRedirectUrl(applicationUrl, request.query.redirect_uri as string | undefined);
+	createUserRedirectUrl(applicationUrl, request.query.redirect_uri as string | undefined);
 

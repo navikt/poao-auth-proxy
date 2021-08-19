@@ -8,7 +8,7 @@ import {
 } from '../service/session-store-service';
 import { logger } from '../logger';
 import { AppConfig } from '../config/app-config';
-import { createRedirectUrl } from '../service/auth-service';
+import { createUserRedirectUrl } from '../service/auth-service';
 
 export const setupCallbackRoutes = (app: express.Application, appConfig: AppConfig, authClient: Client): void => {
 	app.post('/oauth2/callback', (req, res) => {
@@ -39,7 +39,7 @@ export const setupCallbackRoutes = (app: express.Application, appConfig: AppConf
 					logger.info('Storing token with type in session: ' + tokenSet.token_type);
 
 					const storedRedirectUri = getStoredRedirectUri(req);
-					const redirectUri = createRedirectUrl(appConfig.applicationUrl, storedRedirectUri);
+					const redirectUri = createUserRedirectUrl(appConfig.applicationUrl, storedRedirectUri);
 
 					res.redirect(redirectUri);
 				})

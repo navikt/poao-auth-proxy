@@ -2,14 +2,18 @@ import express from 'express';
 import { Client } from 'openid-client';
 import { generateNonce, generateState } from '../utils/auth-utils';
 import { AppConfig } from '../config/app-config';
-import { createAuthorizationUrl, getRedirectUriFromQuery, isTokenValid } from '../service/auth-service';
-import { storeLoginNonce, storeLoginState } from '../service/session-store-service';
+import {
+	createAuthorizationUrl,
+	createLoginRedirectUrl,
+	getRedirectUriFromQuery,
+	isTokenValid
+} from '../service/auth-service';
+import { storeLoginNonce, storeLoginState, storeRedirectUri } from '../service/session-store-service';
 import { logger } from '../logger';
 
 export const setupLoginRoutes = (app: express.Application, appConfig: AppConfig, authClient: Client): void => {
 	app.get('/login', (req, res) => {
 		const redirectUri = getRedirectUriFromQuery(appConfig.applicationUrl, req);
-
 		const isAuthenticated = isTokenValid('TODO');
 
 		if (isAuthenticated) {
@@ -20,10 +24,11 @@ export const setupLoginRoutes = (app: express.Application, appConfig: AppConfig,
 
 			storeLoginState(req, state);
 			storeLoginNonce(req, nonce);
+			storeRedirectUri(req, redirectUri);
 
 			const authorizationUrl = createAuthorizationUrl({
 				client: authClient,
-				redirect_uri: redirectUri,
+				redirect_uri: createLoginRedirectUrl(appConfig.applicationUrl, '/oauth2/callback'),
 				state,
 				nonce
 			});

@@ -27,7 +27,7 @@ async function startServer() {
 			maxAge: 3599000,
 			secure: true,
 			httpOnly: true,
-			sameSite: 'strict',
+			sameSite: 'lax',
 		},
 	});
 
