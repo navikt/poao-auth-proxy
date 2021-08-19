@@ -1,4 +1,5 @@
 import express from 'express';
+import session from 'express-session';
 
 import { logger } from './logger';
 import { setupInternalRoutes } from './route/internal';
@@ -9,11 +10,28 @@ import { createClient, createIssuer } from './service/auth-service';
 import { createJWKS } from './utils/auth-utils';
 import { setupLogoutRoutes } from './route/logout';
 import { setupCheckAuthRoutes } from './route/check-auth';
+import { createAndInitSessionStore } from './service/session-store-service';
 
 const app: express.Application = express();
 
 async function startServer() {
 	logger.info('Starting auth-proxy server...');
+
+	const sessionParser = session({
+		store: createAndInitSessionStore(),
+		name: 'poao-auth-proxy',
+		secret: 'TODO-add-better-secret',
+		resave: false,
+		saveUninitialized: true,
+		cookie: {
+			maxAge: 3599000,
+			secure: true,
+			httpOnly: true,
+			sameSite: 'strict',
+		},
+	});
+
+	app.use(sessionParser);
 
 	const appConfig = createAppConfig();
 
