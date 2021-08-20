@@ -13,17 +13,19 @@ export function createClient(issuer: Issuer<Client>, clientId: string, jwks: JWK
 		client_id: clientId,
 		token_endpoint_auth_method: 'private_key_jwt',
 		token_endpoint_auth_signing_alg: 'RS256',
+		response_types: ['code']
 	}, jwks);
 }
 
-export function createAuthorizationUrl(params: { client: Client, redirect_uri: string, nonce: string, state: string }): string {
+export function createAuthorizationUrl(params: { client: Client, redirect_uri: string, nonce: string, codeChallenge: string }): string {
 	return params.client.authorizationUrl({
-		response_mode: 'form_post',
+		response_mode: 'query', // TODO: form_post is considered more secure but requires manual use of Redis
 		response_type: 'code',
-		scope: 'openid profile',
+		code_challenge: params.codeChallenge,
+		code_challenge_method: 'S256',
+		scope: 'openid profile', // TODO: add app scope
 		redirect_uri: params.redirect_uri,
 		nonce: params.nonce,
-		state: params.state
 	});
 }
 

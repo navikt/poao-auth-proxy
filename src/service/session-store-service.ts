@@ -23,20 +23,20 @@ export const destroySession = (req: Request) => {
 	});
 };
 
-export const storeLoginNonce = (req: Request, nonce: string): void => {
+export const storeNonce = (req: Request, nonce: string): void => {
 	req.session.nonce = nonce;
 };
 
-export const getStoredLoginNonce = (req: Request): string | undefined => {
+export const getStoredNonce = (req: Request): string | undefined => {
 	return req.session.nonce;
 };
 
-export const storeLoginState = (req: Request, state: string): void => {
-	req.session.state = state;
+export const storeCodeVerifier = (req: Request, codeVerifier: string): void => {
+	req.session.codeVerifier = codeVerifier;
 };
 
-export const getStoredLoginState = (req: Request): string | undefined => {
-	return req.session.state;
+export const getStoredCodeVerifier = (req: Request): string | undefined => {
+	return req.session.codeVerifier;
 };
 
 export const storeTokenSet = (req: Request, tokenSet: TokenSet): void => {

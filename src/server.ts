@@ -1,5 +1,6 @@
 import express from 'express';
 import session from 'express-session';
+import bodyParser from 'body-parser';
 
 import { logger } from './logger';
 import { setupInternalRoutes } from './route/internal';
@@ -17,22 +18,6 @@ const app: express.Application = express();
 async function startServer() {
 	logger.info('Starting auth-proxy server...');
 
-	const sessionParser = session({
-		store: createAndInitSessionStore(),
-		name: 'poao-auth-proxy',
-		secret: 'TODO-add-better-secret',
-		resave: false,
-		saveUninitialized: true,
-		cookie: {
-			maxAge: 3599000,
-			secure: true,
-			httpOnly: true,
-			sameSite: 'lax',
-		},
-	});
-
-	app.use(sessionParser);
-
 	const appConfig = createAppConfig();
 
 	const { discoveryUrl, clientId, jwk } = appConfig.oidcConfig;
@@ -44,6 +29,23 @@ async function startServer() {
 	logAppConfig(appConfig);
 
 	app.set('trust proxy', 1);
+
+	const sessionParser = session({
+		store: createAndInitSessionStore(),
+		name: `${appConfig.applicationName}_session`,
+		secret: 'TODO-add-better-secret',
+		resave: false,
+		saveUninitialized: true,
+		cookie: {
+			maxAge: 3599000,
+			secure: true,
+			httpOnly: true,
+			sameSite: 'lax',
+		},
+	});
+
+	app.use(bodyParser.urlencoded({ extended: true }));
+	app.use(sessionParser);
 
 	setupInternalRoutes(app);
 

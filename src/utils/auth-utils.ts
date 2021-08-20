@@ -1,5 +1,7 @@
 import { generators } from 'openid-client';
 
+export const CALLBACK_PATH = '/oauth2/callback';
+
 export interface JWKS {
 	keys: [{
 		kty: 'oct';
@@ -12,6 +14,14 @@ export const generateState = (): string => {
 
 export const generateNonce = (): string => {
 	return generators.nonce();
+};
+
+export const generateCodeVerifier = (): string => {
+	return generators.codeVerifier();
+};
+
+export const generateCodeChallenge = (codeVerifier: string): string => {
+	return generators.codeChallenge(codeVerifier);
 };
 
 export const createJWKS = (jwkJson: string): JWKS => {

@@ -1,4 +1,5 @@
 import { OidcProvider } from './oidc-config';
+import { assert } from '../utils';
 
 export interface EnvironmentConfig {
 	port?: number;
@@ -7,6 +8,7 @@ export interface EnvironmentConfig {
 	jsonConfigFilePath?: string;
 	jsonConfig?: string;
 	corsDomain?: string;
+	applicationName: string;
 }
 
 export function getEnvironmentConfig(): EnvironmentConfig {
@@ -19,6 +21,7 @@ export function getEnvironmentConfig(): EnvironmentConfig {
 		jsonConfigFilePath: environment.jsonConfigFilePath,
 		jsonConfig: environment.jsonConfig,
 		corsDomain: environment.corsDomain,
+		applicationName: environment.applicationName
 	};
 }
 
@@ -54,6 +57,10 @@ export class Environment {
 
 	get corsDomain(): string | undefined {
 		return process.env.CORS_DOMAIN;
+	}
+
+	get applicationName(): string {
+		return assert(process.env.NAIS_APP_NAME, 'NAIS_APP_NAME is missing');
 	}
 
 }

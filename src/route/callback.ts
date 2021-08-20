@@ -1,31 +1,35 @@
 import express from 'express';
 import { Client } from 'openid-client';
 import {
-	getStoredLoginNonce,
-	getStoredLoginState,
+	getStoredCodeVerifier,
+	getStoredNonce,
 	getStoredRedirectUri,
 	storeTokenSet
 } from '../service/session-store-service';
 import { logger } from '../logger';
 import { AppConfig } from '../config/app-config';
-import { createUserRedirectUrl } from '../service/auth-service';
+import { createLoginRedirectUrl, createUserRedirectUrl } from '../service/auth-service';
+import { CALLBACK_PATH } from '../utils/auth-utils';
 
 export const setupCallbackRoutes = (app: express.Application, appConfig: AppConfig, authClient: Client): void => {
-	app.post('/oauth2/callback', (req, res) => {
-		const authorizationCode = req.query.code as string | undefined;
+	app.get(CALLBACK_PATH, (req, res) => {
 		const params = authClient.callbackParams(req);
 
 		// TODO: Remove later
-		logger.info('Callback params: ' + params);
+		logger.info('Cookies: ' + JSON.stringify(req.cookies))
+		logger.info('Callback params: ' + JSON.stringify(params));
+		logger.info('Authorization code: ' + params.code);
 
-		const state = getStoredLoginState(req);
-		const nonce = getStoredLoginNonce(req);
+		const codeVerifier = getStoredCodeVerifier(req);
+		const nonce = getStoredNonce(req);
+
+		// TODO: Remove later
+		logger.info('Nonce: ' + nonce);
 
 		authClient
-			.callback('/oauth2/callback', params, {
-					code_verifier: authorizationCode,
+			.callback(createLoginRedirectUrl(appConfig.applicationUrl, CALLBACK_PATH), params, {
+					code_verifier: codeVerifier,
 					nonce,
-					state
 				}, {
 					clientAssertionPayload: {
 						aud: authClient.issuer.metadata['token_endpoint']
@@ -43,7 +47,10 @@ export const setupCallbackRoutes = (app: express.Application, appConfig: AppConf
 
 					res.redirect(redirectUri);
 				})
-			.catch((error) => logger.error('Feil ved callback', error))
+			.catch((error) => {
+				logger.error('Feil ved callback', error)
+				res.status(500).send('An unexpected error happened logging in');
+			})
 			.finally(() => {
 				// TODO: Cleanup old stuff from session
 			});

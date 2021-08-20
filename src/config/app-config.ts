@@ -12,6 +12,7 @@ export interface AppConfig {
 	oidcConfig: OidcConfig;
 	corsDomain?: string;
 	applicationUrl: string;
+	applicationName: string;
 }
 
 export function createAppConfig(): AppConfig {
@@ -31,6 +32,7 @@ export function createAppConfig(): AppConfig {
 		oidcConfig: oidcConfig,
 		applicationUrl: assert(environmentConfig.applicationUrl, 'Application url is missing'),
 		corsDomain: jsonConfig?.corsDomain || environmentConfig.corsDomain,
+		applicationName: environmentConfig.applicationName
 	};
 }
 
