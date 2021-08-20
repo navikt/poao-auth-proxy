@@ -16,7 +16,7 @@ export const setupCallbackRoutes = (app: express.Application, appConfig: AppConf
 		const params = authClient.callbackParams(req);
 
 		// TODO: Remove later
-		logger.info('Cookies: ' + JSON.stringify(req.cookies))
+		logger.info('SessionId: ' + req.session.id)
 		logger.info('Callback params: ' + JSON.stringify(params));
 		logger.info('Authorization code: ' + params.code);
 

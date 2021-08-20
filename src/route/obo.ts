@@ -20,7 +20,7 @@ export const setupOboTestRoute = (app: express.Application, client: Client): voi
 			return;
 		}
 
-		createOnBehalfOfToken(appId, client, tokenSet)
+		createOnBehalfOfToken(appId, client, tokenSet.access_token)
 			.then(oboTokenSet => {
 				res.send({
 					oboTokenSet: oboTokenSet

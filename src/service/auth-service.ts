@@ -2,7 +2,7 @@ import { Request } from 'express';
 import { Client, Issuer, TokenSet } from 'openid-client';
 import { logger } from '../logger';
 import { createAppIdentifierFromClientId, JWKS } from '../utils/auth-utils';
-import urljoin from 'url-join';
+import urlJoin from 'url-join';
 
 export async function createIssuer(discoveryUrl: string): Promise<Issuer<Client>> {
 	return Issuer.discover(discoveryUrl);
@@ -34,15 +34,15 @@ export function createAuthorizationUrl(params: { client: Client, clientId: strin
 }
 
 // Ex: appIdentifier = api://my-cluster.my-namespace.my-app-name/.default
-export async function createOnBehalfOfToken(appIdentifier: string, client: Client, tokenSet: TokenSet): Promise<TokenSet> {
+export async function createOnBehalfOfToken(appIdentifier: string, client: Client, accessToken: string | undefined): Promise<TokenSet> {
 	return await client.grant({
 		grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
 		client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
 		requested_token_use: 'on_behalf_of',
 		scope: appIdentifier,
-		assertion: tokenSet.access_token,
+		assertion: accessToken,
 		subject_token_type: 'urn:ietf:params:oauth:token-type:jwt',
-		subject_token: tokenSet.access_token,
+		subject_token: accessToken,
 		audience: appIdentifier,
 	}, {
 		clientAssertionPayload: {
@@ -68,7 +68,7 @@ export const createUserRedirectUrl = (applicationUrl: string, redirectUrl: strin
 };
 
 export const createLoginRedirectUrl = (applicationUrl: string, callbackPath: string): string => {
-	return urljoin(applicationUrl, callbackPath);
+	return urlJoin(applicationUrl, callbackPath);
 };
 
 export const getRedirectUriFromQuery = (applicationUrl: string, request: Request) =>

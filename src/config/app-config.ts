@@ -13,6 +13,14 @@ export interface AppConfig {
 	corsDomain?: string;
 	applicationUrl: string;
 	applicationName: string;
+	proxies?: ProxyConfig[];
+}
+
+export interface ProxyConfig {
+	from: string; // Must be a relative path
+	to: string;
+	appIdentifier: string;
+	preserveContextPath?: boolean;
 }
 
 export function createAppConfig(): AppConfig {
@@ -32,7 +40,8 @@ export function createAppConfig(): AppConfig {
 		oidcConfig: oidcConfig,
 		applicationUrl: assert(environmentConfig.applicationUrl, 'Application url is missing'),
 		corsDomain: jsonConfig?.corsDomain || environmentConfig.corsDomain,
-		applicationName: environmentConfig.applicationName
+		applicationName: environmentConfig.applicationName,
+		proxies: jsonConfig?.proxies
 	};
 }
 

@@ -1,6 +1,7 @@
 import express from 'express';
 import session from 'express-session';
 import bodyParser from 'body-parser';
+import urlJoin from 'url-join';
 
 import { logger } from './logger';
 import { setupInternalRoutes } from './route/internal';
@@ -13,6 +14,8 @@ import { setupLogoutRoutes } from './route/logout';
 import { setupCheckAuthRoutes } from './route/check-auth';
 import { createAndInitSessionStore } from './service/session-store-service';
 import { setupOboTestRoute } from './route/obo';
+import { setupProxyRoutes } from './route/proxy';
+import { createSessionCookieName } from './utils/cookie-utils';
 
 const app: express.Application = express();
 
@@ -33,7 +36,7 @@ async function startServer() {
 
 	const sessionParser = session({
 		store: createAndInitSessionStore(),
-		name: `${appConfig.applicationName}_session`,
+		name: createSessionCookieName(appConfig.applicationName),
 		secret: 'TODO-add-better-secret',
 		resave: false,
 		saveUninitialized: true,
@@ -56,6 +59,8 @@ async function startServer() {
 
 	setupCheckAuthRoutes(app);
 	setupOboTestRoute(app, loginClient);
+
+	setupProxyRoutes(app, appConfig, loginClient);
 
 	app.listen(appConfig.port, () => logger.info('Server started successfully'));
 }
