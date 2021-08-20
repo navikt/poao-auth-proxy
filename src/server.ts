@@ -12,6 +12,7 @@ import { createJWKS } from './utils/auth-utils';
 import { setupLogoutRoutes } from './route/logout';
 import { setupCheckAuthRoutes } from './route/check-auth';
 import { createAndInitSessionStore } from './service/session-store-service';
+import { setupOboTestRoute } from './route/obo';
 
 const app: express.Application = express();
 
@@ -52,7 +53,9 @@ async function startServer() {
 	setupLoginRoutes(app, appConfig, loginClient);
 	setupCallbackRoutes(app, appConfig, loginClient);
 	setupLogoutRoutes(app);
+
 	setupCheckAuthRoutes(app);
+	setupOboTestRoute(app, loginClient);
 
 	app.listen(appConfig.port, () => logger.info('Server started successfully'));
 }

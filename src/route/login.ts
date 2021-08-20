@@ -39,6 +39,7 @@ export const setupLoginRoutes = (app: express.Application, appConfig: AppConfig,
 
 			const authorizationUrl = createAuthorizationUrl({
 				client: authClient,
+				clientId: appConfig.oidcConfig.clientId,
 				redirect_uri: createLoginRedirectUrl(appConfig.applicationUrl, CALLBACK_PATH),
 				codeChallenge,
 				nonce
