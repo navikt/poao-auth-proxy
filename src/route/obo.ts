@@ -1,11 +1,20 @@
 import express from 'express';
 import { Client } from 'openid-client';
-import { getStoredTokenSet } from '../service/session-store-service';
 import { createOnBehalfOfToken } from '../service/auth-service';
 import { logger } from '../logger';
+import { SessionStore } from '../client/session-store';
+import { asyncRoute } from '../utils/express-utils';
 
-export const setupOboTestRoute = (app: express.Application, client: Client): void => {
-	app.get('/obo', (req, res) => {
+interface SetupOboTestRouteParams {
+	app: express.Application;
+	sessionStore: SessionStore;
+	authClient: Client;
+}
+
+export const setupOboTestRoute = (params: SetupOboTestRouteParams): void => {
+	const { app, sessionStore, authClient } = params;
+
+	app.get('/obo', asyncRoute(async (req, res) => {
 		const appId = req.query.appId as string | undefined;
 
 		if (!appId) {
@@ -13,14 +22,14 @@ export const setupOboTestRoute = (app: express.Application, client: Client): voi
 			return;
 		}
 
-		const tokenSet = getStoredTokenSet(req);
+		const userTokenSet = await sessionStore.getUserTokenSet(req.sessionID);
 
-		if (!tokenSet) {
+		if (!userTokenSet) {
 			res.status(401).send();
 			return;
 		}
 
-		createOnBehalfOfToken(appId, client, tokenSet.access_token)
+		createOnBehalfOfToken(appId, authClient, userTokenSet.access_token)
 			.then(oboTokenSet => {
 				res.send({
 					oboTokenSet: oboTokenSet
@@ -29,5 +38,5 @@ export const setupOboTestRoute = (app: express.Application, client: Client): voi
 				logger.error('OBO failed', err);
 				res.status(500).send(JSON.stringify(err));
 			});
-	});
+	}));
 };

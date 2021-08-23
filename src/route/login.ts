@@ -14,17 +14,24 @@ import {
 	getRedirectUriFromQuery,
 	isTokenValid
 } from '../service/auth-service';
-import {
-	storeCodeVerifier,
-	storeNonce,
-	storeRedirectUri
-} from '../service/session-store-service';
 import { logger } from '../logger';
+import { SessionStore } from '../client/session-store';
+import { asyncRoute } from '../utils/express-utils';
 
-export const setupLoginRoutes = (app: express.Application, appConfig: AppConfig, authClient: Client): void => {
-	app.get('/login', (req, res) => {
+interface SetupLoginRouteParams {
+	app: express.Application;
+	appConfig: AppConfig;
+	sessionStore: SessionStore;
+	authClient: Client;
+}
+
+export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
+	const { app, appConfig, sessionStore, authClient } = params;
+
+	app.get('/login', asyncRoute(async (req, res) => {
 		const redirectUri = getRedirectUriFromQuery(appConfig.applicationUrl, req);
-		const isAuthenticated = isTokenValid('TODO');
+		const userTokenSet = await sessionStore.getUserTokenSet(req.sessionID);
+		const isAuthenticated = isTokenValid(userTokenSet);
 
 		if (isAuthenticated) {
 			res.redirect(redirectUri);
@@ -33,9 +40,11 @@ export const setupLoginRoutes = (app: express.Application, appConfig: AppConfig,
 			const codeChallenge = generateCodeChallenge(codeVerifier);
 			const nonce = generateNonce();
 
-			storeCodeVerifier(req, codeVerifier);
-			storeNonce(req, nonce);
-			storeRedirectUri(req, redirectUri);
+			await sessionStore.setLoginState(req.sessionID, {
+				codeVerifier,
+				nonce,
+				redirectUri
+			});
 
 			const authorizationUrl = createAuthorizationUrl({
 				client: authClient,
@@ -50,5 +59,5 @@ export const setupLoginRoutes = (app: express.Application, appConfig: AppConfig,
 
 			res.redirect(authorizationUrl);
 		}
-	})
+	}));
 };

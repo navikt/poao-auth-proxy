@@ -1,9 +1,29 @@
 import express from 'express';
-import { destroySession } from '../service/session-store-service';
+import { logger } from '../logger';
+import { SessionStore } from '../client/session-store';
+import { asyncRoute } from '../utils/express-utils';
 
-export const setupLogoutRoutes = (app: express.Application): void => {
-	app.use('/logout', (req, res) => {
-		destroySession(req);
+interface SetupLogoutRoutesParams {
+	app: express.Application;
+	sessionStore: SessionStore;
+}
+
+export const setupLogoutRoutes = (params: SetupLogoutRoutesParams): void => {
+	const { app, sessionStore } = params;
+
+	app.use('/logout', asyncRoute( async (req, res) => {
+		// TODO: frontchannel logout
+
+		await sessionStore.destroySessionData(req.sessionID);
+
+		req.session.destroy((error) => {
+			if (error) {
+				logger.error('Feil ved destroy av session', error);
+			}
+		});
+
+		// TODO: redirect
+
 		res.sendStatus(204);
-	});
+	}));
 };

@@ -3,19 +3,24 @@ import urlJoin from 'url-join';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { logger } from '../logger';
 import { AppConfig } from '../config/app-config';
-import { getStoredTokenSet } from '../service/session-store-service';
 import { createOnBehalfOfToken } from '../service/auth-service';
 import { Client } from 'openid-client';
 import { createAppIdentifierFromClientId } from '../utils/auth-utils';
+import { asyncMiddleware } from '../utils/express-utils';
+import { SessionStore } from '../client/session-store';
 
 const PROXY_BASE_PATH = '/proxy';
 
-// const asyncHandler = fn => (req, res, next) =>
-// 	Promise
-// 		.resolve(fn(req, res, next))
-// 		.catch(next)
+interface SetupProxyRoutesParams {
+	app: express.Application;
+	appConfig: AppConfig;
+	sessionStore: SessionStore;
+	authClient: Client;
+}
 
-export const setupProxyRoutes = (app: express.Application, appConfig: AppConfig, client: Client): void => {
+export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
+	const { app, appConfig, sessionStore, authClient } = params;
+
 	if (!appConfig.proxies) return;
 
 	appConfig.proxies.forEach(proxy => {
@@ -24,24 +29,21 @@ export const setupProxyRoutes = (app: express.Application, appConfig: AppConfig,
 		// TODO: Rename AppIdentifier
 		const appIdentifier = createAppIdentifierFromClientId(proxy.appIdentifier)
 
-		app.use(proxyFrom, async (req, res, next) => {
-			try {
-				// TODO: Add authentication
-				logger.info('Proxying request');
+		app.use(proxyFrom, asyncMiddleware(async (req, res, next) => {
+			// TODO: Add authentication
+			logger.info('Proxying request');
 
-				const storedTokenSet = getStoredTokenSet(req as Request);
-				logger.info('Stored token: ' + JSON.stringify(storedTokenSet)); // TODO: Remove
+			const userTokenSet = await sessionStore.getUserTokenSet((req as Request).sessionID);
 
-				let oboTokenSet = await createOnBehalfOfToken(appIdentifier, client, storedTokenSet?.access_token);
-				logger.info('OBO token: ' + JSON.stringify(oboTokenSet)); // TODO: Remove
+			logger.info('Stored token: ' + JSON.stringify(userTokenSet)); // TODO: Remove
 
-				req.headers['Authorization'] = `Bearer ${oboTokenSet.access_token}`;
+			let oboTokenSet = await createOnBehalfOfToken(appIdentifier, authClient, userTokenSet?.access_token);
+			logger.info('OBO token: ' + JSON.stringify(oboTokenSet)); // TODO: Remove
 
-				next();
-			} catch (error) {
-				next(error);
-			}
-		}, createProxyMiddleware(proxyFrom, {
+			req.headers['Authorization'] = `Bearer ${oboTokenSet.access_token}`;
+
+			next();
+		}), createProxyMiddleware(proxyFrom, {
 			target: proxy.to,
 			logLevel: 'debug',
 			logProvider: () => logger,

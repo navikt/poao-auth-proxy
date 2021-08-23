@@ -27,10 +27,11 @@ export const inMemorySessionStore: SessionStore = {
 
 
 	getUserTokenSet(sessionId: string): Promise<TokenSet | undefined> {
-		return Promise.resolve(store[sessionId]['tokenSet']);
+		return Promise.resolve(store[sessionId]?.tokenSet);
 	},
 	setUserTokenSet(sessionId: string, tokenSet: TokenSet): Promise<void> {
-		store[sessionId]['tokenSet'] = tokenSet;
+		store[sessionId] = {};
+		store[sessionId].tokenSet = tokenSet;
 		return Promise.resolve();
 	},
 

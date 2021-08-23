@@ -1,18 +1,23 @@
 import express from 'express';
 import { Client } from 'openid-client';
-import {
-	getStoredCodeVerifier,
-	getStoredNonce,
-	getStoredRedirectUri,
-	storeTokenSet
-} from '../service/session-store-service';
 import { logger } from '../logger';
 import { AppConfig } from '../config/app-config';
 import { createLoginRedirectUrl, createUserRedirectUrl } from '../service/auth-service';
 import { CALLBACK_PATH } from '../utils/auth-utils';
+import { asyncRoute } from '../utils/express-utils';
+import { SessionStore } from '../client/session-store';
 
-export const setupCallbackRoutes = (app: express.Application, appConfig: AppConfig, authClient: Client): void => {
-	app.get(CALLBACK_PATH, (req, res) => {
+interface SetupCallbackRouteParams {
+	app: express.Application;
+	appConfig: AppConfig;
+	sessionStore: SessionStore;
+	authClient: Client;
+}
+
+export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
+	const { app, appConfig, sessionStore, authClient } = params;
+
+	app.get(CALLBACK_PATH, asyncRoute(async (req, res) => {
 		const params = authClient.callbackParams(req);
 
 		// TODO: Remove later
@@ -20,16 +25,18 @@ export const setupCallbackRoutes = (app: express.Application, appConfig: AppConf
 		logger.info('Callback params: ' + JSON.stringify(params));
 		logger.info('Authorization code: ' + params.code);
 
-		const codeVerifier = getStoredCodeVerifier(req);
-		const nonce = getStoredNonce(req);
+		const loginState = await sessionStore.getLoginState(req.sessionID);
 
-		// TODO: Remove later
-		logger.info('Nonce: ' + nonce);
+		if (!loginState) {
+			logger.error('Fant ikke login state i callback');
+			res.sendStatus(500);
+			return;
+		}
 
 		authClient
 			.callback(createLoginRedirectUrl(appConfig.applicationUrl, CALLBACK_PATH), params, {
-					code_verifier: codeVerifier,
-					nonce,
+					code_verifier: loginState.codeVerifier,
+					nonce: loginState.nonce,
 				}, {
 					clientAssertionPayload: {
 						aud: authClient.issuer.metadata['token_endpoint']
@@ -37,13 +44,11 @@ export const setupCallbackRoutes = (app: express.Application, appConfig: AppConf
 				}
 			)
 			.then((tokenSet) => {
-					storeTokenSet(req, tokenSet);
+					// TODO: Store sid with session Id
 
-					// TODO: Remove later
-					logger.info('Storing token with type in session: ' + tokenSet.token_type);
+					sessionStore.setUserTokenSet(req.sessionID, tokenSet);
 
-					const storedRedirectUri = getStoredRedirectUri(req);
-					const redirectUri = createUserRedirectUrl(appConfig.applicationUrl, storedRedirectUri);
+					const redirectUri = createUserRedirectUrl(appConfig.applicationUrl, loginState.redirectUri);
 
 					res.redirect(redirectUri);
 				})
@@ -52,8 +57,7 @@ export const setupCallbackRoutes = (app: express.Application, appConfig: AppConf
 				res.status(500).send('An unexpected error happened logging in');
 			})
 			.finally(() => {
-				// TODO: Cleanup old stuff from session
+				sessionStore.destroyLoginState(req.sessionID);
 			});
-
-	});
+	}));
 };

@@ -1,21 +1,20 @@
 import express from 'express';
 import session from 'express-session';
 import bodyParser from 'body-parser';
-import urlJoin from 'url-join';
 
 import { logger } from './logger';
 import { setupInternalRoutes } from './route/internal';
 import { createAppConfig, logAppConfig } from './config/app-config';
-import { setupLoginRoutes } from './route/login';
-import { setupCallbackRoutes } from './route/callback';
+import { setupLoginRoute } from './route/login';
+import { setupCallbackRoute } from './route/callback';
 import { createClient, createIssuer } from './service/auth-service';
 import { createJWKS } from './utils/auth-utils';
 import { setupLogoutRoutes } from './route/logout';
-import { setupCheckAuthRoutes } from './route/check-auth';
-import { createAndInitSessionStore } from './service/session-store-service';
+import { setupIsAuthenticatedRoute } from './route/is-authenticated';
 import { setupOboTestRoute } from './route/obo';
 import { setupProxyRoutes } from './route/proxy';
 import { createSessionCookieName } from './utils/cookie-utils';
+import { inMemorySessionStore } from './client/in-memory-session-store';
 
 const app: express.Application = express();
 
@@ -35,7 +34,6 @@ async function startServer() {
 	app.set('trust proxy', 1);
 
 	const sessionParser = session({
-		store: createAndInitSessionStore(),
 		name: createSessionCookieName(appConfig.applicationName),
 		secret: 'TODO-add-better-secret',
 		resave: false,
@@ -53,14 +51,14 @@ async function startServer() {
 
 	setupInternalRoutes(app);
 
-	setupLoginRoutes(app, appConfig, loginClient);
-	setupCallbackRoutes(app, appConfig, loginClient);
-	setupLogoutRoutes(app);
+	setupLoginRoute({ app, appConfig, sessionStore: inMemorySessionStore, authClient: loginClient });
+	setupCallbackRoute({ app, appConfig, sessionStore: inMemorySessionStore, authClient: loginClient });
+	setupLogoutRoutes({ app, sessionStore: inMemorySessionStore });
 
-	setupCheckAuthRoutes(app);
-	setupOboTestRoute(app, loginClient);
+	setupIsAuthenticatedRoute({ app, sessionStore: inMemorySessionStore });
+	setupOboTestRoute({ app, sessionStore: inMemorySessionStore, authClient: loginClient });
 
-	setupProxyRoutes(app, appConfig, loginClient);
+	setupProxyRoutes({ app, appConfig, sessionStore: inMemorySessionStore, authClient: loginClient });
 
 	app.listen(appConfig.port, () => logger.info('Server started successfully'));
 }

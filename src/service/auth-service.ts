@@ -52,8 +52,13 @@ export async function createOnBehalfOfToken(appIdentifier: string, client: Clien
 	});
 }
 
-export const isTokenValid = (token: any): boolean => {
-	return false;
+export const isTokenValid = (tokenSet: TokenSet | undefined): boolean => {
+	if (!tokenSet) {
+		return false;
+	}
+
+	// TODO: check expiration etc
+	return true;
 };
 
 export const createUserRedirectUrl = (applicationUrl: string, redirectUrl: string | undefined): string => {
