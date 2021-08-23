@@ -1,3 +1,4 @@
+import corsMiddleware from 'cors';
 import express from 'express';
 import session from 'express-session';
 import bodyParser from 'body-parser';
@@ -13,8 +14,8 @@ import { setupLogoutRoutes } from './route/logout';
 import { setupIsAuthenticatedRoute } from './route/is-authenticated';
 import { setupOboTestRoute } from './route/obo';
 import { setupProxyRoutes } from './route/proxy';
-import { createSessionCookieName } from './utils/cookie-utils';
 import { inMemorySessionStore } from './client/in-memory-session-store';
+import { StoreType } from './config/session-storage-config';
 
 const app: express.Application = express();
 
@@ -23,42 +24,51 @@ async function startServer() {
 
 	const appConfig = createAppConfig();
 
-	const { discoveryUrl, clientId, jwk } = appConfig.oidcConfig;
-
-	const loginIssuer = await createIssuer(discoveryUrl);
-
-	const loginClient = createClient(loginIssuer, clientId, createJWKS(jwk));
-
 	logAppConfig(appConfig);
+
+	const { oidc, cors, sessionCookie, sessionStorage } = appConfig;
 
 	app.set('trust proxy', 1);
 
 	const sessionParser = session({
-		name: createSessionCookieName(appConfig.applicationName),
-		secret: 'TODO-add-better-secret',
+		name: sessionCookie.name,
+		secret: sessionCookie.secret,
 		resave: false,
 		saveUninitialized: true,
 		cookie: {
-			maxAge: 3599000,
-			secure: true,
-			httpOnly: true,
-			sameSite: 'lax',
+			maxAge: sessionCookie.maxAge,
+			secure: sessionCookie.secure,
+			httpOnly: sessionCookie.httpOnly,
+			sameSite: sessionCookie.sameSite,
 		},
 	});
 
 	app.use(bodyParser.urlencoded({ extended: true }));
 	app.use(sessionParser);
+	app.use(corsMiddleware({
+		origin: cors.origin,
+		credentials: cors.credentials,
+		maxAge: cors.maxAge,
+		allowedHeaders: cors.allowedHeaders
+	}));
+
+	const authIssuer = await createIssuer(oidc.discoveryUrl);
+	const authClient = createClient(authIssuer, oidc.clientId, createJWKS(oidc.jwk));
+
+	const sessionStore = sessionStorage.storeType === StoreType.IN_MEMORY
+		? inMemorySessionStore
+		: inMemorySessionStore; // TODO: Replace with redis
 
 	setupInternalRoutes(app);
 
-	setupLoginRoute({ app, appConfig, sessionStore: inMemorySessionStore, authClient: loginClient });
-	setupCallbackRoute({ app, appConfig, sessionStore: inMemorySessionStore, authClient: loginClient });
-	setupLogoutRoutes({ app, sessionStore: inMemorySessionStore });
+	setupLoginRoute({ app, appConfig, sessionStore, authClient });
+	setupCallbackRoute({ app, appConfig, sessionStore, authClient });
+	setupLogoutRoutes({ app, sessionStore });
 
-	setupIsAuthenticatedRoute({ app, sessionStore: inMemorySessionStore });
-	setupOboTestRoute({ app, sessionStore: inMemorySessionStore, authClient: loginClient });
+	setupIsAuthenticatedRoute({ app, sessionStore });
+	setupOboTestRoute({ app, sessionStore, authClient });
 
-	setupProxyRoutes({ app, appConfig, sessionStore: inMemorySessionStore, authClient: loginClient });
+	setupProxyRoutes({ app, appConfig, sessionStore, authClient });
 
 	app.listen(appConfig.port, () => logger.info('Server started successfully'));
 }

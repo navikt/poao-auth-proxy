@@ -48,7 +48,7 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 
 			const authorizationUrl = createAuthorizationUrl({
 				client: authClient,
-				clientId: appConfig.oidcConfig.clientId,
+				clientId: appConfig.oidc.clientId,
 				redirect_uri: createLoginRedirectUrl(appConfig.applicationUrl, CALLBACK_PATH),
 				codeChallenge,
 				nonce
