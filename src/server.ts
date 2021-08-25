@@ -41,6 +41,7 @@ async function startServer() {
 			secure: sessionCookie.secure,
 			httpOnly: sessionCookie.httpOnly,
 			sameSite: sessionCookie.sameSite,
+			domain: sessionCookie.domain
 		},
 	});
 

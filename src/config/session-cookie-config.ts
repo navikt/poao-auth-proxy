@@ -20,6 +20,7 @@ export interface SessionCookieConfig {
 	secure: boolean;
 	httpOnly: boolean;
 	sameSite: SameSite;
+	domain?: string;
 }
 
 export const logSessionCookieConfig = (config: SessionCookieConfig): void => {
@@ -66,6 +67,7 @@ const resolveSessionCookieConfigFromEnvironment = (): Partial<SessionCookieConfi
 		secure: strToBoolean(process.env.SESSION_COOKIE_SECURE),
 		httpOnly: strToBoolean(process.env.SESSION_COOKIE_HTTP_ONLY),
 		sameSite: strToEnum(process.env.SESSION_COOKIE_SAME_SITE, SameSite),
+		domain: process.env.SESSION_COOKIE_DOMAIN
 	};
 };
 
