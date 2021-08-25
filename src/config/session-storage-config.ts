@@ -1,6 +1,6 @@
 import merge from 'lodash.merge';
 import { logger } from '../logger';
-import { strToEnum } from '../utils';
+import { strToEnum, strToNumber } from '../utils';
 import { JsonConfig } from './app-config-resolver';
 
 export enum StoreType {
@@ -11,11 +11,13 @@ export enum StoreType {
 export interface SessionStorageConfig {
 	storeType: StoreType;
 	redisHost?: string;
-	redisPort?: string;
+	redisPort: number;
 	redisPassword?: string;
 }
 
 const DEFAULT_STORE_TYPE = StoreType.IN_MEMORY;
+
+const DEFAULT_REDIS_PORT = 6379;
 
 export const logSessionStorageConfig = (config: SessionStorageConfig): void => {
 	const { storeType, redisHost, redisPort } = config;
@@ -32,6 +34,10 @@ export const resolveSessionStorageConfig = (jsonConfig: JsonConfig): SessionStor
 		mergedConfig.storeType = DEFAULT_STORE_TYPE;
 	}
 
+	if (!mergedConfig.redisPort) {
+		mergedConfig.redisPort = DEFAULT_REDIS_PORT;
+	}
+
 	validateSessionStorageConfig(mergedConfig);
 
 	return mergedConfig as SessionStorageConfig;
@@ -41,8 +47,8 @@ const resolveSessionStorageConfigFromEnvironment = (): Partial<SessionStorageCon
 	return {
 		storeType: strToEnum(process.env.SESSION_STORAGE_STORE_TYPE, StoreType),
 		redisHost: process.env.SESSION_STORAGE_REDIS_HOST,
-		redisPort: process.env.SESSION_STORAGE_REDIS_PORT,
-		redisPassword: process.env.SESSION_STORAGE_REDIS_PORT
+		redisPort: strToNumber(process.env.SESSION_STORAGE_REDIS_PORT),
+		redisPassword: process.env.SESSION_STORAGE_REDIS_PASSWORD
 	};
 };
 
@@ -51,7 +57,7 @@ const resolveSessionStorageConfigFromJson = (jsonConfig: JsonConfig): Partial<Se
 };
 
 const validateSessionStorageConfig = (config: Partial<SessionStorageConfig>): void => {
-	const { storeType, redisHost, redisPort, redisPassword } = config;
+	const { storeType, redisHost, redisPort } = config;
 
 	if (!storeType) {
 		throw new Error(`'Store type' is missing`);
@@ -65,10 +71,6 @@ const validateSessionStorageConfig = (config: Partial<SessionStorageConfig>): vo
 
 		if (!redisPort) {
 			throw new Error(`'Redis port' is missing`);
-		}
-
-		if (!redisPassword) {
-			throw new Error(`'Redis password' is missing`);
 		}
 
 	}

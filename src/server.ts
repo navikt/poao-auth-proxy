@@ -16,6 +16,7 @@ import { setupOboTestRoute } from './route/obo';
 import { setupProxyRoutes } from './route/proxy';
 import { inMemorySessionStore } from './client/in-memory-session-store';
 import { StoreType } from './config/session-storage-config';
+import { createRedisSessionStore } from './client/redis-session-store';
 
 const app: express.Application = express();
 
@@ -57,7 +58,7 @@ async function startServer() {
 
 	const sessionStore = sessionStorage.storeType === StoreType.IN_MEMORY
 		? inMemorySessionStore
-		: inMemorySessionStore; // TODO: Replace with redis
+		: createRedisSessionStore(appConfig.sessionStorage);
 
 	setupInternalRoutes(app);
 

@@ -42,6 +42,7 @@
     "http-proxy-middleware": "^2.0.1",
     "lodash.merge": "^4.6.2",
     "openid-client": "^4.7.4",
+    "redis": "^3.1.2",
     "url-join": "^4.0.1",
     "winston": "^3.3.3"
   },
@@ -53,6 +54,7 @@
     "@types/lodash.merge": "^4.6.6",
     "@types/node": "^16.6.2",
     "@types/openid-client": "^3.7.0",
+    "@types/redis": "^2.8.31",
     "@types/url-join": "^4.0.1",
     "husky": "^7.0.1",
     "import-sort-style-module": "^6.0.0",

@@ -14,7 +14,7 @@ export const setupLogoutRoutes = (params: SetupLogoutRoutesParams): void => {
 	app.use('/logout', asyncRoute( async (req, res) => {
 		// TODO: frontchannel logout
 
-		await sessionStore.destroySessionData(req.sessionID);
+		await sessionStore.destroyUserTokenSet(req.sessionID);
 
 		req.session.destroy((error) => {
 			if (error) {

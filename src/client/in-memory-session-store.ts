@@ -4,11 +4,11 @@ import { LoginState, SessionStore } from './session-store';
 const store: {
 	loginState: { [key: string]: any;  }
 	idProviderSession: { [key: string]: string; },
-	sessionData: { [key: string]: any; }
+	userTokens: { [key: string]: any; }
 } = {
 	loginState: {},
 	idProviderSession: {},
-	sessionData: {}
+	userTokens: {}
 };
 
 export const inMemorySessionStore: SessionStore = {
@@ -32,20 +32,17 @@ export const inMemorySessionStore: SessionStore = {
 		store.idProviderSession[oidcSessionId] = sessionId;
 		return Promise.resolve(undefined);
 	},
-	// TODO: Destroy logout session id
 
 
 	getUserTokenSet(sessionId: string): Promise<TokenSet | undefined> {
-		return Promise.resolve(store.sessionData[sessionId]?.tokenSet);
+		return Promise.resolve(store.userTokens[sessionId]?.tokenSet);
 	},
 	setUserTokenSet(sessionId: string, tokenSet: TokenSet): Promise<void> {
-		store.sessionData[sessionId] = { tokenSet };
+		store.userTokens[sessionId] = { tokenSet };
 		return Promise.resolve();
 	},
-
-
-	destroySessionData(sessionId: string): Promise<void> {
-		store.sessionData[sessionId] = undefined;
+	destroyUserTokenSet(sessionId: string): Promise<void> {
+		store.userTokens[sessionId] = undefined;
 		return Promise.resolve();
 	},
 };
