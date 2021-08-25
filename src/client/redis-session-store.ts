@@ -18,7 +18,7 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 		password: sessionStorageConfig.redisPassword
 	});
 
-	client.on("error", logger.error);
+	client.on('error', (...args: any[]) => logger.error(args));
 
 	const getAsync = promisify(client.get).bind(client);
 	const setAsync = promisify(client.set).bind(client) as (key: string, value: string) => Promise<void>;
