@@ -75,7 +75,9 @@ const resolveSessionCookieConfigFromJson = (jsonConfig: JsonConfig | undefined):
 };
 
 const validateSessionCookieConfig = (config: Partial<SessionCookieConfig>): void => {
-	// TODO
+	if (!config.secret) {
+		throw new Error(`'Session cookie secret' is missing`);
+	}
 }
 
 const createSessionCookieName = (applicationName: string): string => {
