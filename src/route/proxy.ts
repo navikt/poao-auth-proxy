@@ -3,7 +3,7 @@ import urlJoin from 'url-join';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { logger } from '../logger';
 import { AppConfig } from '../config/app-config-resolver';
-import { createOnBehalfOfToken } from '../service/auth-service';
+import { createOnBehalfOfToken, isTokenValid } from '../service/auth-service';
 import { Client } from 'openid-client';
 import { createAppIdentifierFromClientId } from '../utils/auth-utils';
 import { asyncMiddleware } from '../utils/express-utils';
@@ -28,14 +28,17 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 		const appIdentifier = createAppIdentifierFromClientId(proxy.appIdentifier)
 
 		app.use(proxyFrom, asyncMiddleware(async (req, res, next) => {
-			// TODO: Add authentication
-			logger.info('Proxying request');
-
 			const userTokenSet = await sessionStore.getUserTokenSet((req as Request).sessionID);
+
+			if (!userTokenSet || !isTokenValid(userTokenSet)) {
+				res.sendStatus(401);
+				return;
+			}
 
 			logger.info('Stored token: ' + JSON.stringify(userTokenSet)); // TODO: Remove
 
-			let oboTokenSet = await createOnBehalfOfToken(appIdentifier, authClient, userTokenSet?.access_token);
+			const oboTokenSet = await createOnBehalfOfToken(appIdentifier, authClient, userTokenSet.access_token);
+
 			logger.info('OBO token: ' + JSON.stringify(oboTokenSet)); // TODO: Remove
 
 			req.headers['Authorization'] = `Bearer ${oboTokenSet.access_token}`;

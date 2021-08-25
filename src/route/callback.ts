@@ -43,10 +43,10 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 					}
 				}
 			)
-			.then((tokenSet) => {
+			.then(async (tokenSet) => {
 					// TODO: Store sid with session Id
 
-					sessionStore.setUserTokenSet(req.sessionID, tokenSet);
+					await sessionStore.setUserTokenSet(req.sessionID, tokenSet);
 
 					const redirectUri = createUserRedirectUrl(appConfig.applicationUrl, loginState.redirectUri);
 
