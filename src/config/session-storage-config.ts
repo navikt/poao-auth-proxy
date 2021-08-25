@@ -1,4 +1,7 @@
+import merge from 'lodash.merge';
 import { logger } from '../logger';
+import { strToEnum } from '../utils';
+import { JsonConfig } from './app-config-resolver';
 
 export enum StoreType {
 	REDIS = 'REDIS',
@@ -12,42 +15,47 @@ export interface SessionStorageConfig {
 	redisPassword?: string;
 }
 
-export class SessionStorageEnvironmentConfig {
-
-	get storeType(): StoreType | undefined {
-		// TODO: this logic is duplicated, move to environment-utils.ts?
-		const storeType = process.env.STORE_TYPE;
-
-		if (storeType && Object.values(StoreType).includes(storeType as StoreType)) {
-			return storeType as StoreType;
-		}
-
-		return undefined;
-	}
-
-	get redisHost(): string | undefined {
-		return process.env.REDIS_HOST;
-	}
-
-	get redisPort(): string | undefined {
-		return process.env.REDIS_PORT;
-	}
-
-	get redisPassword(): string | undefined {
-		return process.env.REDIS_PASSWORD;
-	}
-
-}
-
-
+const DEFAULT_STORE_TYPE = StoreType.IN_MEMORY;
 
 export const logSessionStorageConfig = (config: SessionStorageConfig): void => {
 	const { storeType, redisHost, redisPort } = config;
-	logger.info(`Session Storage: storeType=${storeType} redisHost=${redisHost || 'N/A'} redisPort=${redisPort || 'N/A'}`);
+	logger.info(`Session storage config: storeType=${storeType} redisHost=${redisHost || 'N/A'} redisPort=${redisPort || 'N/A'}`);
 }
 
-export const validateSessionCookieConfig = (config: SessionStorageConfig): void => {
+export const resolveSessionStorageConfig = (jsonConfig: JsonConfig): SessionStorageConfig => {
+	const configFromEnv = resolveSessionStorageConfigFromEnvironment();
+	const configFromJson = resolveSessionStorageConfigFromJson(jsonConfig);
+
+	const mergedConfig = merge({}, configFromEnv, configFromJson);
+
+	if (!mergedConfig.storeType) {
+		mergedConfig.storeType = DEFAULT_STORE_TYPE;
+	}
+
+	validateSessionStorageConfig(mergedConfig);
+
+	return mergedConfig as SessionStorageConfig;
+};
+
+const resolveSessionStorageConfigFromEnvironment = (): Partial<SessionStorageConfig> => {
+	return {
+		storeType: strToEnum(process.env.SESSION_STORAGE_STORE_TYPE, StoreType),
+		redisHost: process.env.SESSION_STORAGE_REDIS_HOST,
+		redisPort: process.env.SESSION_STORAGE_REDIS_PORT,
+		redisPassword: process.env.SESSION_STORAGE_REDIS_PORT
+	};
+};
+
+const resolveSessionStorageConfigFromJson = (jsonConfig: JsonConfig): Partial<SessionStorageConfig> => {
+	return jsonConfig.sessionStorage;
+};
+
+const validateSessionStorageConfig = (config: Partial<SessionStorageConfig>): void => {
 	const { storeType, redisHost, redisPort, redisPassword } = config;
+
+	if (!storeType) {
+		throw new Error(`'Store type' is missing`);
+	}
 
 	if (storeType === StoreType.REDIS) {
 

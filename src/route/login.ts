@@ -7,7 +7,7 @@ import {
 	generateNonce,
 	generateState
 } from '../utils/auth-utils';
-import { AppConfig } from '../config/app-config';
+import { AppConfig } from '../config/app-config-resolver';
 import {
 	createAuthorizationUrl,
 	createLoginRedirectUrl,

@@ -2,7 +2,7 @@ import express, { Request } from 'express';
 import urlJoin from 'url-join';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { logger } from '../logger';
-import { AppConfig } from '../config/app-config';
+import { AppConfig } from '../config/app-config-resolver';
 import { createOnBehalfOfToken } from '../service/auth-service';
 import { Client } from 'openid-client';
 import { createAppIdentifierFromClientId } from '../utils/auth-utils';
@@ -21,9 +21,7 @@ interface SetupProxyRoutesParams {
 export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 	const { app, appConfig, sessionStore, authClient } = params;
 
-	if (!appConfig.proxies) return;
-
-	appConfig.proxies.forEach(proxy => {
+	appConfig.proxy.proxies.forEach(proxy => {
 		const proxyFrom = urlJoin(PROXY_BASE_PATH, proxy.from);
 
 		// TODO: Rename AppIdentifier

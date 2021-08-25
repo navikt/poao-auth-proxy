@@ -1,7 +1,7 @@
 import express from 'express';
 import { Client } from 'openid-client';
 import { logger } from '../logger';
-import { AppConfig } from '../config/app-config';
+import { AppConfig } from '../config/app-config-resolver';
 import { createLoginRedirectUrl, createUserRedirectUrl } from '../service/auth-service';
 import { CALLBACK_PATH } from '../utils/auth-utils';
 import { asyncRoute } from '../utils/express-utils';

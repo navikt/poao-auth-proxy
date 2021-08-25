@@ -5,7 +5,7 @@ import bodyParser from 'body-parser';
 
 import { logger } from './logger';
 import { setupInternalRoutes } from './route/internal';
-import { createAppConfig, logAppConfig } from './config/app-config';
+import { createAppConfig, logAppConfig } from './config/app-config-resolver';
 import { setupLoginRoute } from './route/login';
 import { setupCallbackRoute } from './route/callback';
 import { createClient, createIssuer } from './service/auth-service';
