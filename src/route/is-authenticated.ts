@@ -14,6 +14,8 @@ export const setupIsAuthenticatedRoute = (params: SetupCallbackRouteParams): voi
 	app.get('/is-authenticated', asyncRoute(async (req, res) => {
 		const userTokenSet = await sessionStore.getUserTokenSet(req.sessionID);
 
+		res.setHeader('cache-control', 'no-cache');
+
 		res.send({
 			isAuthenticated: isTokenValid(userTokenSet)
 		});
