@@ -3,14 +3,15 @@ import merge from 'lodash.merge';
 import { strToBoolean, strToEnum, strToNumber } from '../utils';
 import { JsonConfig } from './app-config-resolver';
 
-const DEFAULT_SESSION_COOKIE_MAX_AGE = 43200; // 12 hours
-const DEFAULT_SESSION_COOKIE_SECURE = true;
-const DEFAULT_SESSION_COOKIE_HTTP_ONLY = true;
-
 enum SameSite {
 	LAX = 'lax',
 	STRICT = 'strict'
 }
+
+const DEFAULT_SESSION_COOKIE_MAX_AGE = 43200; // 12 hours
+const DEFAULT_SESSION_COOKIE_SECURE = true;
+const DEFAULT_SESSION_COOKIE_HTTP_ONLY = true;
+const DEFAULT_SESSION_COOKIE_SAME_SITE = SameSite.LAX;
 
 export interface SessionCookieConfig {
 	name: string;
@@ -42,6 +43,10 @@ export const resolveSessionCookieConfig = (applicationName: string, jsonConfig: 
 
 	if (mergedConfig.secure === undefined) {
 		mergedConfig.secure = DEFAULT_SESSION_COOKIE_SECURE;
+	}
+
+	if (mergedConfig.sameSite === undefined) {
+		mergedConfig.sameSite = DEFAULT_SESSION_COOKIE_SAME_SITE;
 	}
 
 	if (mergedConfig.httpOnly === undefined) {
