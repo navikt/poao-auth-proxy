@@ -5,7 +5,7 @@ import { AppConfig } from '../config/app-config-resolver';
 import { createLoginRedirectUrl, createUserRedirectUrl } from '../service/auth-service';
 import { CALLBACK_PATH } from '../utils/auth-utils';
 import { asyncRoute } from '../utils/express-utils';
-import { SessionStore } from '../client/session-store';
+import { SessionStore } from '../session-store/session-store';
 
 interface SetupCallbackRouteParams {
 	app: express.Application;

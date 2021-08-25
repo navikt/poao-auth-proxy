@@ -7,7 +7,7 @@ import { createOnBehalfOfToken } from '../service/auth-service';
 import { Client } from 'openid-client';
 import { createAppIdentifierFromClientId } from '../utils/auth-utils';
 import { asyncMiddleware } from '../utils/express-utils';
-import { SessionStore } from '../client/session-store';
+import { SessionStore } from '../session-store/session-store';
 
 const PROXY_BASE_PATH = '/proxy';
 

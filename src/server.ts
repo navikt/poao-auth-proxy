@@ -14,9 +14,9 @@ import { setupLogoutRoutes } from './route/logout';
 import { setupIsAuthenticatedRoute } from './route/is-authenticated';
 import { setupOboTestRoute } from './route/obo';
 import { setupProxyRoutes } from './route/proxy';
-import { inMemorySessionStore } from './client/in-memory-session-store';
+import { inMemorySessionStore } from './session-store/in-memory-session-store';
 import { StoreType } from './config/session-storage-config';
-import { createRedisSessionStore } from './client/redis-session-store';
+import { createRedisSessionStore } from './session-store/redis-session-store';
 
 const app: express.Application = express();
 

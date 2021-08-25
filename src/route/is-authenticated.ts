@@ -1,5 +1,5 @@
 import express from 'express';
-import { SessionStore } from '../client/session-store';
+import { SessionStore } from '../session-store/session-store';
 import { asyncRoute } from '../utils/express-utils';
 import { isTokenValid } from '../service/auth-service';
 

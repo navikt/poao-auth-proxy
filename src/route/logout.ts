@@ -1,6 +1,6 @@
 import express from 'express';
 import { logger } from '../logger';
-import { SessionStore } from '../client/session-store';
+import { SessionStore } from '../session-store/session-store';
 import { asyncRoute } from '../utils/express-utils';
 
 interface SetupLogoutRoutesParams {

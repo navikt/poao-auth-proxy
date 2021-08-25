@@ -2,7 +2,7 @@ import express from 'express';
 import { Client } from 'openid-client';
 import { createOnBehalfOfToken } from '../service/auth-service';
 import { logger } from '../logger';
-import { SessionStore } from '../client/session-store';
+import { SessionStore } from '../session-store/session-store';
 import { asyncRoute } from '../utils/express-utils';
 
 interface SetupOboTestRouteParams {
