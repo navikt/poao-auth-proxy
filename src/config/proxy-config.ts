@@ -19,7 +19,7 @@ export const logProxyConfig = (proxyConfig: ProxyConfig): void => {
 	});
 }
 
-export const resolveProxyConfig = (jsonConfig: JsonConfig): ProxyConfig => {
+export const resolveProxyConfig = (jsonConfig: JsonConfig | undefined): ProxyConfig => {
 	const config = resolveProxyConfigFromJson(jsonConfig);
 
 	if (!config.proxies) {
@@ -31,7 +31,8 @@ export const resolveProxyConfig = (jsonConfig: JsonConfig): ProxyConfig => {
 	return config as ProxyConfig;
 };
 
-const resolveProxyConfigFromJson = (jsonConfig: JsonConfig): Partial<ProxyConfig> => {
+const resolveProxyConfigFromJson = (jsonConfig: JsonConfig | undefined): Partial<ProxyConfig> => {
+	if (!jsonConfig?.proxy) return {};
 	return jsonConfig.proxy;
 };
 

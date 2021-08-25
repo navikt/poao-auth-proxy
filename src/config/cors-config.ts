@@ -19,7 +19,7 @@ export const logCorsConfig = (config: CorsConfig): void => {
 	logger.info(`Cors config: origin=${origin} credentials=${credentials} maxAge=${maxAge} allowedHeaders=${allowedHeaders}`);
 }
 
-export const resolveCorsConfig = (jsonConfig: JsonConfig): CorsConfig => {
+export const resolveCorsConfig = (jsonConfig: JsonConfig | undefined): CorsConfig => {
 	const configFromEnv = resolveCorsConfigFromEnvironment();
 	const configFromJson = resolveCorsConfigFromJson(jsonConfig);
 
@@ -51,8 +51,8 @@ const resolveCorsConfigFromEnvironment = (): Partial<CorsConfig> => {
 	};
 };
 
-const resolveCorsConfigFromJson = (jsonConfig: JsonConfig): Partial<CorsConfig> => {
-	if (!jsonConfig.cors) return {};
+const resolveCorsConfigFromJson = (jsonConfig: JsonConfig | undefined): Partial<CorsConfig> => {
+	if (!jsonConfig?.cors) return {};
 
 	const allowedHeaders = csvStrToStrArray(jsonConfig.cors.allowedHeaders);
 

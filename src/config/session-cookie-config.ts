@@ -26,7 +26,7 @@ export const logSessionCookieConfig = (config: SessionCookieConfig): void => {
 	logger.info(`Session cookie config: name=${name} maxAge=${maxAge} secure=${secure} httpOnly=${httpOnly} sameSite=${sameSite}`);
 }
 
-export const resolveSessionCookieConfig = (applicationName: string, jsonConfig: JsonConfig): SessionCookieConfig => {
+export const resolveSessionCookieConfig = (applicationName: string, jsonConfig: JsonConfig | undefined): SessionCookieConfig => {
 	const configFromEnv = resolveSessionCookieConfigFromEnvironment();
 	const configFromJson = resolveSessionCookieConfigFromJson(jsonConfig);
 
@@ -64,7 +64,8 @@ const resolveSessionCookieConfigFromEnvironment = (): Partial<SessionCookieConfi
 	};
 };
 
-const resolveSessionCookieConfigFromJson = (jsonConfig: JsonConfig): Partial<SessionCookieConfig> => {
+const resolveSessionCookieConfigFromJson = (jsonConfig: JsonConfig | undefined): Partial<SessionCookieConfig> => {
+	if (!jsonConfig?.sessionCookie) return {};
 	return jsonConfig.sessionCookie;
 };
 

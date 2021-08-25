@@ -24,7 +24,7 @@ export const logSessionStorageConfig = (config: SessionStorageConfig): void => {
 	logger.info(`Session storage config: storeType=${storeType} redisHost=${redisHost || 'N/A'} redisPort=${redisPort || 'N/A'}`);
 }
 
-export const resolveSessionStorageConfig = (jsonConfig: JsonConfig): SessionStorageConfig => {
+export const resolveSessionStorageConfig = (jsonConfig: JsonConfig | undefined): SessionStorageConfig => {
 	const configFromEnv = resolveSessionStorageConfigFromEnvironment();
 	const configFromJson = resolveSessionStorageConfigFromJson(jsonConfig);
 
@@ -52,7 +52,8 @@ const resolveSessionStorageConfigFromEnvironment = (): Partial<SessionStorageCon
 	};
 };
 
-const resolveSessionStorageConfigFromJson = (jsonConfig: JsonConfig): Partial<SessionStorageConfig> => {
+const resolveSessionStorageConfigFromJson = (jsonConfig: JsonConfig | undefined): Partial<SessionStorageConfig> => {
+	if (!jsonConfig?.sessionStorage) return {};
 	return jsonConfig.sessionStorage;
 };
 

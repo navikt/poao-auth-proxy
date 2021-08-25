@@ -18,7 +18,7 @@ export const logOidcConfig = (config: OidcConfig): void => {
 	logger.info(`OIDC config: discoveryUrl=${discoveryUrl} clientId=${clientId}`);
 }
 
-export const resolveOidcConfig = (jsonConfig: JsonConfig): OidcConfig => {
+export const resolveOidcConfig = (jsonConfig: JsonConfig | undefined): OidcConfig => {
 	const authProviderFromEnv = resolveAuthProviderFromEnvironment();
 	const authProviderFromJson = resolveAuthProviderFromJson(jsonConfig);
 
@@ -41,8 +41,8 @@ const resolveAuthProviderFromEnvironment = (): AuthProvider | undefined => {
 	return strToEnum(process.env.OIDC_AUTH_PROVIDER, AuthProvider);
 };
 
-const resolveAuthProviderFromJson = (jsonConfig: JsonConfig): AuthProvider | undefined => {
-	if (!jsonConfig.oidc) return undefined;
+const resolveAuthProviderFromJson = (jsonConfig: JsonConfig | undefined): AuthProvider | undefined => {
+	if (!jsonConfig?.oidc) return undefined;
 
 	return strToEnum(jsonConfig.oidc.authProvider, AuthProvider);
 };
