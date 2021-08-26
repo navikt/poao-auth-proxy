@@ -4,12 +4,15 @@ import { LoginState, SessionStore } from './session-store';
 import { logger } from '../logger';
 import { promisify } from 'util';
 import { SessionStorageConfig } from '../config/session-storage-config';
+import { getAdjustedExpireInSeconds, getExpiresInSeconds, OboToken, OidcTokenSet } from '../utils/auth-utils';
 
 const createLoginStateKey = (id: string): string => `loginState.${id}`;
 
 const createUserTokensKey = (sessionId: string): string => `sessionId.${sessionId}`;
 
 const createAuthProviderSessionKey = (authProviderSid: string): string => `authProviderSid.${authProviderSid}`;
+
+const createOboTokenKey = (sessionId: string, appIdentifier: string): string => `oboToken.${sessionId}.${appIdentifier}`;
 
 export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConfig): SessionStore => {
 	const client = redis.createClient({
@@ -18,10 +21,9 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 		password: sessionStorageConfig.redisPassword
 	});
 
-	client.on('error', (...args: any[]) => logger.error(args));
-
 	const getAsync = promisify(client.get).bind(client);
 	const setAsync = promisify(client.set).bind(client) as (key: string, value: string) => Promise<void>;
+	const setexAsync = promisify(client.setex).bind(client);
 	const delAsync = (key: string): Promise<void> => {
 		return new Promise((resolve, reject) => {
 			client.del(key, (err, reply) => {
@@ -73,9 +75,14 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 					logger.error(err);
 				});
 		},
+		destroyLogoutSessionId(oidcSessionId: string): Promise<void> {
+			return delAsync(createAuthProviderSessionKey(oidcSessionId))
+				.catch(err => {
+					logger.error(err);
+				});
+		},
 
-
-		getUserTokenSet(sessionId: string): Promise<TokenSet | undefined> {
+		getUserTokenSet(sessionId: string): Promise<OidcTokenSet | undefined> {
 			return getAsync(createUserTokensKey(sessionId))
 				.then(data => {
 					return data ? JSON.parse(data) : undefined;
@@ -84,7 +91,7 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 					return undefined;
 				});
 		},
-		setUserTokenSet(sessionId: string, tokenSet: TokenSet): Promise<void> {
+		setUserTokenSet(sessionId: string, tokenSet: OidcTokenSet): Promise<void> {
 			return setAsync(createUserTokensKey(sessionId), JSON.stringify(tokenSet))
 				.catch(err => {
 					logger.error(err);
@@ -96,5 +103,25 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 					logger.error(err);
 				});
 		},
+
+		getUserOboToken(sessionId: string, appIdentifier: string): Promise<OboToken | undefined> {
+			return getAsync(createOboTokenKey(sessionId, appIdentifier))
+				.then(data => {
+					return data ? JSON.parse(data) : undefined;
+				}).catch(err => {
+					logger.error(err);
+					return undefined;
+				});
+		},
+		setUserOboToken(sessionId: string, appIdentifier: string, oboToken: OboToken): Promise<void> {
+			const expiresInSeconds = getExpiresInSeconds(oboToken.expiresAt);
+			const adjustedExpiresInSeconds = getAdjustedExpireInSeconds(expiresInSeconds);
+
+			return setexAsync(createOboTokenKey(sessionId, appIdentifier),adjustedExpiresInSeconds, JSON.stringify(oboToken))
+				.then(() => {})
+				.catch(err => {
+					logger.error(err);
+				});
+		}
 	};
 }

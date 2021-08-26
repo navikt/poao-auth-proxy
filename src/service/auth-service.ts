@@ -1,7 +1,7 @@
 import { Request } from 'express';
-import { Client, Issuer, TokenSet } from 'openid-client';
+import { Client, Issuer } from 'openid-client';
 import { logger } from '../logger';
-import { createAppIdentifierFromClientId, JWKS } from '../utils/auth-utils';
+import { createAppIdentifierFromClientId, JWKS, OboToken, OidcTokenSet, tokenSetToOboToken } from '../utils/auth-utils';
 import urlJoin from 'url-join';
 
 export async function createIssuer(discoveryUrl: string): Promise<Issuer<Client>> {
@@ -34,8 +34,8 @@ export function createAuthorizationUrl(params: { client: Client, clientId: strin
 }
 
 // Ex: appIdentifier = api://my-cluster.my-namespace.my-app-name/.default
-export async function createOnBehalfOfToken(appIdentifier: string, client: Client, accessToken: string | undefined): Promise<TokenSet> {
-	return await client.grant({
+export async function createOnBehalfOfToken(appIdentifier: string, client: Client, accessToken: string): Promise<OboToken> {
+	const oboTokenSet = await client.grant({
 		grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
 		client_assertion_type: 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer',
 		requested_token_use: 'on_behalf_of',
@@ -50,9 +50,11 @@ export async function createOnBehalfOfToken(appIdentifier: string, client: Clien
 			nbf: Math.floor(Date.now() / 1000),
 		}
 	});
+
+	return tokenSetToOboToken(oboTokenSet);
 }
 
-export const isTokenValid = (tokenSet: TokenSet | undefined): boolean => {
+export const isTokenValid = (tokenSet: OidcTokenSet | undefined): boolean => {
 	if (!tokenSet) {
 		return false;
 	}

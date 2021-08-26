@@ -1,14 +1,19 @@
 import { TokenSet } from 'openid-client';
 import { LoginState, SessionStore } from './session-store';
+import { OboToken, OidcTokenSet } from '../utils/auth-utils';
+
+// NB: This SessionStore implementation leaks memory and is unsafe to use in production
 
 const store: {
 	loginState: { [key: string]: any;  }
-	idProviderSession: { [key: string]: string; },
-	userTokens: { [key: string]: any; }
+	idProviderSession: { [key: string]: string | undefined; },
+	userTokens: { [key: string]: any; },
+	oboTokens: { [key: string]: any; }
 } = {
 	loginState: {},
 	idProviderSession: {},
-	userTokens: {}
+	userTokens: {},
+	oboTokens: {}
 };
 
 export const inMemorySessionStore: SessionStore = {
@@ -20,7 +25,7 @@ export const inMemorySessionStore: SessionStore = {
 		return Promise.resolve();
 	},
 	destroyLoginState(id: string): Promise<void> {
-		store.loginState[id] = undefined;
+		delete store.loginState[id];
 		return Promise.resolve();
 	},
 
@@ -32,17 +37,38 @@ export const inMemorySessionStore: SessionStore = {
 		store.idProviderSession[oidcSessionId] = sessionId;
 		return Promise.resolve(undefined);
 	},
+	destroyLogoutSessionId(oidcSessionId: string): Promise<void> {
+		delete store.idProviderSession[oidcSessionId];
+		return Promise.resolve();
+	},
 
 
-	getUserTokenSet(sessionId: string): Promise<TokenSet | undefined> {
+	getUserTokenSet(sessionId: string): Promise<OidcTokenSet | undefined> {
 		return Promise.resolve(store.userTokens[sessionId]?.tokenSet);
 	},
-	setUserTokenSet(sessionId: string, tokenSet: TokenSet): Promise<void> {
+	setUserTokenSet(sessionId: string, tokenSet: OidcTokenSet): Promise<void> {
 		store.userTokens[sessionId] = { tokenSet };
 		return Promise.resolve();
 	},
 	destroyUserTokenSet(sessionId: string): Promise<void> {
-		store.userTokens[sessionId] = undefined;
+		delete store.userTokens[sessionId];
 		return Promise.resolve();
 	},
+
+	getUserOboToken(sessionId: string, appIdentifier: string): Promise<OboToken | undefined> {
+		if (!store.oboTokens[sessionId]) {
+			return Promise.resolve(undefined);
+		}
+
+		return Promise.resolve(store.oboTokens[sessionId][appIdentifier]);
+	},
+	setUserOboToken(sessionId: string, appIdentifier: string, oboToken: OboToken): Promise<void> {
+		if (!store.oboTokens[sessionId]) {
+			store.oboTokens[sessionId] = {};
+		}
+
+		store.oboTokens[sessionId][appIdentifier] = oboToken;
+
+		return Promise.resolve();
+	}
 };

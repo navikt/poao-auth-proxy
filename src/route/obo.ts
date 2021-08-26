@@ -29,7 +29,7 @@ export const setupOboTestRoute = (params: SetupOboTestRouteParams): void => {
 			return;
 		}
 
-		createOnBehalfOfToken(appId, authClient, userTokenSet.access_token)
+		createOnBehalfOfToken(appId, authClient, userTokenSet.accessToken)
 			.then(oboTokenSet => {
 				res.send({
 					oboTokenSet: oboTokenSet

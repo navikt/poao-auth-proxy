@@ -28,20 +28,24 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 		const appIdentifier = createAppIdentifierFromClientId(proxy.appIdentifier)
 
 		app.use(proxyFrom, asyncMiddleware(async (req, res, next) => {
-			const userTokenSet = await sessionStore.getUserTokenSet((req as Request).sessionID);
+			const userTokenSet = await sessionStore.getUserTokenSet(req.sessionID);
 
 			if (!userTokenSet || !isTokenValid(userTokenSet)) {
 				res.sendStatus(401);
 				return;
 			}
 
-			logger.info('Stored token: ' + JSON.stringify(userTokenSet)); // TODO: Remove
+			let oboToken = await sessionStore.getUserOboToken(req.sessionID, appIdentifier);
 
-			const oboTokenSet = await createOnBehalfOfToken(appIdentifier, authClient, userTokenSet.access_token);
+			logger.info('Cached obo token: ' + oboToken ? JSON.stringify(oboToken) : undefined);
 
-			logger.info('OBO token: ' + JSON.stringify(oboTokenSet)); // TODO: Remove
+			if (!oboToken) {
+				oboToken = await createOnBehalfOfToken(appIdentifier, authClient, userTokenSet.accessToken);
+				logger.info('New obo: ' + JSON.stringify(oboToken));
+				await sessionStore.setUserOboToken(req.sessionID, appIdentifier, oboToken);
+			}
 
-			req.headers['Authorization'] = `Bearer ${oboTokenSet.access_token}`;
+			req.headers['Authorization'] = `Bearer ${oboToken.accessToken}`;
 
 			next();
 		}), createProxyMiddleware(proxyFrom, {

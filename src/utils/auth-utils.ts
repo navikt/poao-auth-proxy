@@ -1,11 +1,31 @@
-import { generators } from 'openid-client';
+import { generators, TokenSet } from 'openid-client';
+import { assert } from './index';
 
 export const CALLBACK_PATH = '/oauth2/callback';
+
+// The OBO token should be considered expired a bit before the actual expiration.
+// This is to prevent problems with clock skew and that the token might expire in-flight.
+const OBO_TOKEN_EXPIRE_BEFORE_SECONDS = 15;
 
 export interface JWKS {
 	keys: [{
 		kty: 'oct';
 	}],
+}
+
+export interface OidcTokenSet {
+	tokenType: string;      // Always "Bearer"
+	scope: string;          // Scopes (permissions) that the access_token has
+	expiresAt: number;      // Epoch ms timestamp for expiration
+	accessToken: string;
+	idToken: string;
+}
+
+export interface OboToken {
+	tokenType: string;      // Always "Bearer"
+	scope: string;          // Scopes (permissions) that the OBO token has
+	expiresAt: number;      // Epoch ms timestamp for expiration
+	accessToken: string;    // The OBO token
 }
 
 export const generateState = (): string => {
@@ -43,3 +63,31 @@ export const createJWKS = (jwkJson: string): JWKS => {
 		keys: [jwk]
 	}
 }
+
+export const getExpiresInSeconds = (expiresAtEpochMs: number): number => {
+	const expiresInMs = expiresAtEpochMs - new Date().getMilliseconds();
+	return Math.ceil(expiresInMs / 1000);
+};
+
+export const getAdjustedExpireInSeconds = (expiresInSeconds: number): number => {
+	return expiresInSeconds - OBO_TOKEN_EXPIRE_BEFORE_SECONDS;
+};
+
+export const tokenSetToOboToken = (tokenSet: TokenSet): OboToken => {
+	return {
+		tokenType: assert(tokenSet.token_type, 'Missing token_type'),
+		scope: assert(tokenSet.scope, 'Missing scope'),
+		expiresAt: assert(tokenSet.expires_at, 'Missing expires_at'),
+		accessToken: assert(tokenSet.access_token, 'Missing access_token'),
+	};
+};
+
+export const tokenSetToOidcTokenSet = (tokenSet: TokenSet): OidcTokenSet => {
+	return {
+		tokenType: assert(tokenSet.token_type, 'Missing token_type'),
+		scope: assert(tokenSet.scope, 'Missing scope'),
+		expiresAt: assert(tokenSet.expires_at, 'Missing expires_at'),
+		accessToken: assert(tokenSet.access_token, 'Missing access_token'),
+		idToken: assert(tokenSet.id_token, 'Missing id_token'),
+	};
+};

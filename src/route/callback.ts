@@ -3,7 +3,7 @@ import { Client } from 'openid-client';
 import { logger } from '../logger';
 import { AppConfig } from '../config/app-config-resolver';
 import { createLoginRedirectUrl, createUserRedirectUrl } from '../service/auth-service';
-import { CALLBACK_PATH } from '../utils/auth-utils';
+import { CALLBACK_PATH, tokenSetToOidcTokenSet } from '../utils/auth-utils';
 import { asyncRoute } from '../utils/express-utils';
 import { SessionStore } from '../session-store/session-store';
 
@@ -44,9 +44,9 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 				}
 			)
 			.then(async (tokenSet) => {
-					// TODO: Store sid with session Id
+					// TODO: Store sid with session Id for ID_PORTEN
 
-					await sessionStore.setUserTokenSet(req.sessionID, tokenSet);
+					await sessionStore.setUserTokenSet(req.sessionID, tokenSetToOidcTokenSet(tokenSet));
 
 					const redirectUri = createUserRedirectUrl(appConfig.applicationUrl, loginState.redirectUri);
 
