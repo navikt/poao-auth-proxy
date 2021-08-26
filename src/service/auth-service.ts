@@ -17,18 +17,17 @@ export function createClient(issuer: Issuer<Client>, clientId: string, jwks: JWK
 	}, jwks);
 }
 
-export function createAuthorizationUrl(params: { client: Client, clientId: string, redirect_uri: string, nonce: string, codeChallenge: string }): string {
-	// (Ved idporten-integrasjon må authorzation-kallet inneholde parameteren resource for at tokenet skal inneholde aud)
-	// På JSON-format. Feks {"resource": "nav.no"}
+export function createAuthorizationUrl(params: { client: Client, clientId: string, redirect_uri: string, state: string, nonce: string, codeChallenge: string }): string {
 	const authProxyAppIdentifier = createAppIdentifierFromClientId(params.clientId);
 
 	return params.client.authorizationUrl({
-		response_mode: 'query', // TODO: form_post is considered more secure but requires manual use of Redis
+		response_mode: 'form_post',
 		response_type: 'code',
 		code_challenge: params.codeChallenge,
 		code_challenge_method: 'S256',
 		scope: `openid profile ${authProxyAppIdentifier}`,
 		redirect_uri: params.redirect_uri,
+		state: params.state,
 		nonce: params.nonce,
 	});
 }

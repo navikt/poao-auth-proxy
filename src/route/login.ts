@@ -39,11 +39,13 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 			const codeVerifier = generateCodeVerifier();
 			const codeChallenge = generateCodeChallenge(codeVerifier);
 			const nonce = generateNonce();
+			const state = generateState();
 
-			await sessionStore.setLoginState(req.sessionID, {
+			await sessionStore.setLoginState(state, {
 				codeVerifier,
 				nonce,
-				redirectUri
+				redirectUri,
+				state
 			});
 
 			const authorizationUrl = createAuthorizationUrl({
@@ -51,10 +53,12 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 				clientId: appConfig.oidc.clientId,
 				redirect_uri: createLoginRedirectUrl(appConfig.applicationUrl, CALLBACK_PATH),
 				codeChallenge,
+				state,
 				nonce
 			});
 
 			// TODO: Remove later
+			logger.info('Session id login: ' + req.sessionID);
 			logger.info('Redirecting to authorization url: ' + authorizationUrl);
 
 			res.redirect(authorizationUrl);

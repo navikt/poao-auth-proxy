@@ -17,15 +17,20 @@ interface SetupCallbackRouteParams {
 export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 	const { app, appConfig, sessionStore, authClient } = params;
 
-	app.get(CALLBACK_PATH, asyncRoute(async (req, res) => {
+	app.post(CALLBACK_PATH, asyncRoute(async (req, res) => {
 		const params = authClient.callbackParams(req);
 
 		// TODO: Remove later
-		logger.info('SessionId: ' + req.session.id)
+		logger.info('SessionId: ' + req.sessionID);
 		logger.info('Callback params: ' + JSON.stringify(params));
-		logger.info('Authorization code: ' + params.code);
 
-		const loginState = await sessionStore.getLoginState(req.sessionID);
+		if (!params.state) {
+			logger.error('State is missing from callback');
+			res.sendStatus(400);
+			return;
+		}
+
+		const loginState = await sessionStore.getLoginState(params.state);
 
 		if (!loginState) {
 			logger.error('Fant ikke login state i callback');
@@ -37,6 +42,7 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 			.callback(createLoginRedirectUrl(appConfig.applicationUrl, CALLBACK_PATH), params, {
 					code_verifier: loginState.codeVerifier,
 					nonce: loginState.nonce,
+					state: params.state
 				}, {
 					clientAssertionPayload: {
 						aud: authClient.issuer.metadata['token_endpoint']
@@ -57,7 +63,7 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 				res.status(500).send('An unexpected error happened logging in');
 			})
 			.finally(() => {
-				sessionStore.destroyLoginState(req.sessionID);
+				sessionStore.destroyLoginState(params.state!!);
 			});
 	}));
 };

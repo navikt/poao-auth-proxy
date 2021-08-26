@@ -2,6 +2,7 @@ import { OboToken, OidcTokenSet } from '../utils/auth-utils';
 
 export interface LoginState {
 	nonce: string;
+	state: string;
 	codeVerifier: string;
 	redirectUri: string;
 }
