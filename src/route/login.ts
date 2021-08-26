@@ -9,6 +9,7 @@ import {
 } from '../utils/auth-utils';
 import { AppConfig } from '../config/app-config-resolver';
 import {
+	ALLOWED_REDIRECT_HOSTNAMES,
 	createAuthorizationUrl,
 	createLoginRedirectUrl,
 	getRedirectUriFromQuery,
@@ -17,6 +18,7 @@ import {
 import { logger } from '../logger';
 import { SessionStore } from '../session-store/session-store';
 import { asyncRoute } from '../utils/express-utils';
+import { endsWithOneOf } from '../utils/url-utils';
 
 interface SetupLoginRouteParams {
 	app: express.Application;
@@ -31,9 +33,13 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 	app.get('/login', asyncRoute(async (req, res) => {
 		const redirectUri = getRedirectUriFromQuery(appConfig.applicationUrl, req);
 		const userTokenSet = await sessionStore.getUserTokenSet(req.sessionID);
-		const isAuthenticated = isTokenValid(userTokenSet);
 
-		if (isAuthenticated) {
+		if (!endsWithOneOf(redirectUri, ALLOWED_REDIRECT_HOSTNAMES)) {
+			res.status(400).send(`${redirectUri} is not valid`);
+			return;
+		}
+
+		if (isTokenValid(userTokenSet)) {
 			res.redirect(redirectUri);
 		} else {
 			const codeVerifier = generateCodeVerifier();

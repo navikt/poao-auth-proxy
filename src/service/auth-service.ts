@@ -4,6 +4,8 @@ import { logger } from '../logger';
 import { createAppIdentifierFromClientId, JWKS, OboToken, OidcTokenSet, tokenSetToOboToken } from '../utils/auth-utils';
 import urlJoin from 'url-join';
 
+export const ALLOWED_REDIRECT_HOSTNAMES = ['nav.no'];
+
 export async function createIssuer(discoveryUrl: string): Promise<Issuer<Client>> {
 	return Issuer.discover(discoveryUrl);
 }
