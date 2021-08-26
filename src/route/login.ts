@@ -2,7 +2,7 @@ import express from 'express';
 import { Client } from 'openid-client';
 
 import { AppConfig } from '../config/app-config-resolver';
-import { AuthProvider } from '../config/auth-config';
+import { LoginProvider } from '../config/auth-config';
 import {
 	ALLOWED_REDIRECT_HOSTNAMES,
 	createAzureAdAuthorizationUrl,
@@ -69,7 +69,7 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 				};
 
 				const authorizationUrl =
-					appConfig.auth.authProvider === AuthProvider.AZURE_AD
+					appConfig.auth.loginProvider === LoginProvider.AZURE_AD
 						? createAzureAdAuthorizationUrl(authorizationUrlParams)
 						: createIdPortenAuthorizationUrl(authorizationUrlParams);
 
