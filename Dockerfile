@@ -1,5 +1,7 @@
 FROM node:14-alpine as builder
 
+# docker pull node:16.7.0-alpine3.14
+
 WORKDIR /app
 
 COPY . .

@@ -1,6 +1,6 @@
 import express from 'express';
 import { Client } from 'openid-client';
-import { logger } from '../logger';
+import { logger } from '../utils/logger';
 import { AppConfig } from '../config/app-config-resolver';
 import { createLoginRedirectUrl, createUserRedirectUrl } from '../service/auth-service';
 import { CALLBACK_PATH, tokenSetToOidcTokenSet } from '../utils/auth-utils';

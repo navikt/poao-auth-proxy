@@ -10,15 +10,16 @@ import {
 import { AppConfig } from '../config/app-config-resolver';
 import {
 	ALLOWED_REDIRECT_HOSTNAMES,
-	createAuthorizationUrl,
+	createAzureAdAuthorizationUrl, createIdPortenAuthorizationUrl,
 	createLoginRedirectUrl,
 	getRedirectUriFromQuery,
 	isTokenValid
 } from '../service/auth-service';
-import { logger } from '../logger';
+import { logger } from '../utils/logger';
 import { SessionStore } from '../session-store/session-store';
 import { asyncRoute } from '../utils/express-utils';
 import { endsWithOneOf } from '../utils/url-utils';
+import { AuthProvider } from '../config/auth-config';
 
 interface SetupLoginRouteParams {
 	app: express.Application;
@@ -54,14 +55,18 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 				state
 			});
 
-			const authorizationUrl = createAuthorizationUrl({
+			const authorizationUrlParams = {
 				client: authClient,
-				clientId: appConfig.oidc.clientId,
+				clientId: appConfig.auth.clientId,
 				redirect_uri: createLoginRedirectUrl(appConfig.applicationUrl, CALLBACK_PATH),
 				codeChallenge,
 				state,
 				nonce
-			});
+			};
+
+			const authorizationUrl = appConfig.auth.authProvider === AuthProvider.AZURE_AD
+				? createAzureAdAuthorizationUrl(authorizationUrlParams)
+				: createIdPortenAuthorizationUrl(authorizationUrlParams);
 
 			// TODO: Remove later
 			logger.info('Session id login: ' + req.sessionID);

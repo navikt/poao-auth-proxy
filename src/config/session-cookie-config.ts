@@ -1,4 +1,4 @@
-import { logger } from '../logger';
+import { logger } from '../utils/logger';
 import merge from 'lodash.merge';
 import { strToBoolean, strToEnum, strToNumber } from '../utils';
 import { JsonConfig } from './app-config-resolver';

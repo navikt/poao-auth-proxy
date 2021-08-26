@@ -1,6 +1,6 @@
 import { resolveBaseConfig } from './base-config';
-import { logger } from '../logger';
-import { logOidcConfig, OidcConfig, resolveOidcConfig } from './oidc-config';
+import { logger } from '../utils/logger';
+import { logAuthConfig, AuthConfig, resolveOidcConfig } from './auth-config';
 import { CorsConfig, logCorsConfig, resolveCorsConfig } from './cors-config';
 import { logProxyConfig, ProxyConfig, resolveProxyConfig } from './proxy-config';
 import {
@@ -23,7 +23,7 @@ export interface AppConfig {
 	port: number;
 	applicationUrl: string;
 	applicationName: string;
-	oidc: OidcConfig;
+	auth: AuthConfig;
 	cors: CorsConfig;
 	sessionCookie: SessionCookieConfig;
 	sessionStorage: SessionStorageConfig;
@@ -41,7 +41,7 @@ export function createAppConfig(): AppConfig {
 		port: baseConfig.port,
 		applicationUrl: baseConfig.applicationUrl,
 		applicationName: baseConfig.applicationName,
-		oidc: resolveOidcConfig(jsonConfig),
+		auth: resolveOidcConfig(jsonConfig),
 		cors: resolveCorsConfig(jsonConfig),
 		sessionCookie: resolveSessionCookieConfig(baseConfig.applicationName, jsonConfig),
 		sessionStorage: resolveSessionStorageConfig(jsonConfig),
@@ -53,7 +53,7 @@ export function logAppConfig(appConfig: AppConfig): void {
 	logger.info(`Config: port=${appConfig.port} applicationName=${appConfig.applicationName} applicationUrl=${appConfig.applicationUrl}`);
 
 	logCorsConfig(appConfig.cors);
-	logOidcConfig(appConfig.oidc);
+	logAuthConfig(appConfig.auth);
 
 	logSessionCookieConfig(appConfig.sessionCookie);
 	logSessionStorageConfig(appConfig.sessionStorage);

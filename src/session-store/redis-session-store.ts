@@ -1,6 +1,6 @@
 import redis from 'redis';
 import { LOGIN_STATE_TIMEOUT_AFTER_SECONDS, LoginState, SessionStore } from './session-store';
-import { logger } from '../logger';
+import { logger } from '../utils/logger';
 import { promisify } from 'util';
 import { SessionStorageConfig } from '../config/session-storage-config';
 import { getAdjustedExpireInSeconds, getExpiresInSeconds, OboToken, OidcTokenSet } from '../utils/auth-utils';

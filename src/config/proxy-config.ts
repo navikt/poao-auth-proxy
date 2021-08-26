@@ -1,5 +1,5 @@
-import { logger } from '../logger';
 import { JsonConfig } from './app-config-resolver';
+import { logger } from '../utils/logger';
 
 export interface ProxyConfig {
 	proxies: Proxy[];

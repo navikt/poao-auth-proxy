@@ -49,7 +49,7 @@ export const generateCodeChallenge = (codeVerifier: string): string => {
  * Creates an app identifier that is used when requesting tokens for a given application
  * @param appClientId can either be of type 'e89006c5-7193-4ca3-8e26-d0990d9d981f' or 'dev-gcp.aura.nais-testapp'
  */
-export const createAppIdentifierFromClientId = (appClientId: string): string => {
+export const createAzureAdAppIdentifierFromClientId = (appClientId: string): string => {
 	return `api://${appClientId}/.default`;
 };
 

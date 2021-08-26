@@ -1,5 +1,5 @@
 import express from 'express';
-import { logger } from '../logger';
+import { logger } from '../utils/logger';
 import { SessionStore } from '../session-store/session-store';
 import { asyncRoute } from '../utils/express-utils';
 
@@ -11,7 +11,7 @@ interface SetupLogoutRoutesParams {
 export const setupLogoutRoutes = (params: SetupLogoutRoutesParams): void => {
 	const { app, sessionStore } = params;
 
-	app.use('/logout', asyncRoute( async (req, res) => {
+	app.use('/oauth2/logout', asyncRoute( async (req, res) => {
 		// TODO: frontchannel logout
 
 		await sessionStore.destroyUserTokenSet(req.sessionID);

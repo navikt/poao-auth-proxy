@@ -3,9 +3,9 @@ import express from 'express';
 import session from 'express-session';
 import bodyParser from 'body-parser';
 
-import { logger } from './logger';
+import { logger } from './utils/logger';
 import { setupInternalRoutes } from './route/internal';
-import { createAppConfig, logAppConfig } from './config/app-config-resolver';
+import { AppConfig, createAppConfig, logAppConfig } from './config/app-config-resolver';
 import { setupLoginRoute } from './route/login';
 import { setupCallbackRoute } from './route/callback';
 import { createClient, createIssuer } from './service/auth-service';
@@ -20,14 +20,14 @@ import { createRedisSessionStore } from './session-store/redis-session-store';
 
 const app: express.Application = express();
 
-async function startServer() {
-	logger.info('Starting auth-proxy server...');
+const appConfig = createAppConfig();
 
-	const appConfig = createAppConfig();
+async function startServer(appConfig: AppConfig) {
+	logger.info('Starting auth-proxy server...');
 
 	logAppConfig(appConfig);
 
-	const { oidc, cors, sessionCookie, sessionStorage } = appConfig;
+	const { auth, cors, sessionCookie, sessionStorage } = appConfig;
 
 	app.set('trust proxy', 1);
 
@@ -54,8 +54,15 @@ async function startServer() {
 		allowedHeaders: cors.allowedHeaders
 	}));
 
-	const authIssuer = await createIssuer(oidc.discoveryUrl);
-	const authClient = createClient(authIssuer, oidc.clientId, createJWKS(oidc.jwk));
+	const authIssuer = await createIssuer(auth.discoveryUrl);
+	const authClient = createClient(authIssuer, auth.clientId, createJWKS(auth.privateJwk));
+	let oboTokenClient = authClient;
+
+	if (auth.tokenX) {
+		const tokenXIssuer = await createIssuer(auth.tokenX.discoveryUrl);
+
+		oboTokenClient = createClient(tokenXIssuer, auth.tokenX.clientId, createJWKS(auth.tokenX.privateJwk));
+	}
 
 	const sessionStore = sessionStorage.storeType === StoreType.IN_MEMORY
 		? inMemorySessionStore
@@ -68,13 +75,13 @@ async function startServer() {
 	setupLogoutRoutes({ app, sessionStore });
 
 	setupIsAuthenticatedRoute({ app, sessionStore });
-	setupOboTestRoute({ app, sessionStore, authClient });
+	setupOboTestRoute({ app, appConfig, sessionStore, oboTokenClient });
 
-	setupProxyRoutes({ app, appConfig, sessionStore, authClient });
+	setupProxyRoutes({ app, appConfig, sessionStore, oboTokenClient });
 
 	app.listen(appConfig.port, () => logger.info('Server started successfully'));
 }
 
-startServer().catch((err) => {
+startServer(appConfig).catch((err) => {
 	logger.error('Failed to start server:', err);
 });

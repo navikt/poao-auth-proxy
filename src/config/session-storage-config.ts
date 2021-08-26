@@ -1,5 +1,5 @@
 import merge from 'lodash.merge';
-import { logger } from '../logger';
+import { logger } from '../utils/logger';
 import { strToEnum, strToNumber } from '../utils';
 import { JsonConfig } from './app-config-resolver';
 
