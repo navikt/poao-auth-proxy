@@ -18,7 +18,7 @@ export function resolveBaseConfig(): BaseConfig {
 		applicationName: process.env.APPLICATION_NAME,
 		applicationUrl: process.env.APPLICATION_URL,
 		jsonConfigFilePath: process.env.JSON_CONFIG_FILE_PATH,
-		jsonConfig: process.env.JSON_CONFIG
+		jsonConfig: process.env.JSON_CONFIG,
 	};
 
 	if (!config.port) {
@@ -41,4 +41,4 @@ export function resolveBaseConfig(): BaseConfig {
 const validateBaseConfig = (config: Partial<BaseConfig>): void => {
 	assert(config.applicationName, `'Application name' is missing`);
 	assert(config.applicationUrl, `'Application url' is missing`);
-}
+};

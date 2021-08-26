@@ -1,18 +1,18 @@
+import { OboToken, OidcTokenSet, getAdjustedExpireInSeconds, getExpiresInSeconds } from '../utils/auth-utils';
 import { LOGIN_STATE_TIMEOUT_AFTER_SECONDS, LoginState, SessionStore } from './session-store';
-import { getAdjustedExpireInSeconds, getExpiresInSeconds, OboToken, OidcTokenSet } from '../utils/auth-utils';
 
 // NB: This SessionStore implementation is unsafe to use in production
 
 const store: {
-	loginState: { [key: string]: any;  }
-	idProviderSession: { [key: string]: string | undefined; },
-	userTokens: { [key: string]: any; },
-	oboTokens: { [key: string]: any; }
+	loginState: { [key: string]: any };
+	idProviderSession: { [key: string]: string | undefined };
+	userTokens: { [key: string]: any };
+	oboTokens: { [key: string]: any };
 } = {
 	loginState: {},
 	idProviderSession: {},
 	userTokens: {},
-	oboTokens: {}
+	oboTokens: {},
 };
 
 export const inMemorySessionStore: SessionStore = {
@@ -29,7 +29,6 @@ export const inMemorySessionStore: SessionStore = {
 		return Promise.resolve();
 	},
 
-
 	getLogoutSessionId(oidcSessionId: string): Promise<string | undefined> {
 		return Promise.resolve(store.idProviderSession[oidcSessionId]);
 	},
@@ -41,7 +40,6 @@ export const inMemorySessionStore: SessionStore = {
 		delete store.idProviderSession[oidcSessionId];
 		return Promise.resolve();
 	},
-
 
 	getUserTokenSet(sessionId: string): Promise<OidcTokenSet | undefined> {
 		return Promise.resolve(store.userTokens[sessionId]?.tokenSet);
@@ -77,5 +75,5 @@ export const inMemorySessionStore: SessionStore = {
 		store.oboTokens[sessionId][appIdentifier] = oboToken;
 
 		return Promise.resolve();
-	}
+	},
 };

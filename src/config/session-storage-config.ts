@@ -1,11 +1,12 @@
 import merge from 'lodash.merge';
-import { logger } from '../utils/logger';
+
 import { strToEnum, strToNumber } from '../utils';
+import { logger } from '../utils/logger';
 import { JsonConfig } from './app-config-resolver';
 
 export enum StoreType {
 	REDIS = 'REDIS',
-	IN_MEMORY = 'IN_MEMORY'
+	IN_MEMORY = 'IN_MEMORY',
 }
 
 export interface SessionStorageConfig {
@@ -21,8 +22,10 @@ const DEFAULT_REDIS_PORT = 6379;
 
 export const logSessionStorageConfig = (config: SessionStorageConfig): void => {
 	const { storeType, redisHost, redisPort } = config;
-	logger.info(`Session storage config: storeType=${storeType} redisHost=${redisHost || 'N/A'} redisPort=${redisPort || 'N/A'}`);
-}
+	logger.info(
+		`Session storage config: storeType=${storeType} redisHost=${redisHost || 'N/A'} redisPort=${redisPort || 'N/A'}`
+	);
+};
 
 export const resolveSessionStorageConfig = (jsonConfig: JsonConfig | undefined): SessionStorageConfig => {
 	const configFromEnv = resolveSessionStorageConfigFromEnvironment();
@@ -48,7 +51,7 @@ const resolveSessionStorageConfigFromEnvironment = (): Partial<SessionStorageCon
 		storeType: strToEnum(process.env.SESSION_STORAGE_STORE_TYPE, StoreType),
 		redisHost: process.env.SESSION_STORAGE_REDIS_HOST,
 		redisPort: strToNumber(process.env.SESSION_STORAGE_REDIS_PORT),
-		redisPassword: process.env.SESSION_STORAGE_REDIS_PASSWORD
+		redisPassword: process.env.SESSION_STORAGE_REDIS_PASSWORD,
 	};
 };
 
@@ -65,7 +68,6 @@ const validateSessionStorageConfig = (config: Partial<SessionStorageConfig>): vo
 	}
 
 	if (storeType === StoreType.REDIS) {
-
 		if (!redisHost) {
 			throw new Error(`'Redis host' is missing`);
 		}
@@ -73,7 +75,5 @@ const validateSessionStorageConfig = (config: Partial<SessionStorageConfig>): vo
 		if (!redisPort) {
 			throw new Error(`'Redis port' is missing`);
 		}
-
 	}
-
-}
+};

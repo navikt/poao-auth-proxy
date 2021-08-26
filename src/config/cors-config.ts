@@ -1,6 +1,7 @@
-import { logger } from '../utils/logger';
 import merge from 'lodash.merge';
+
 import { csvStrToStrArray, strToBoolean, strToNumber } from '../utils';
+import { logger } from '../utils/logger';
 import { JsonConfig } from './app-config-resolver';
 
 export const DEFAULT_CORS_MAX_AGE = 7200; // 2 hours. Chrome caps out at this value
@@ -16,8 +17,10 @@ export interface CorsConfig {
 
 export const logCorsConfig = (config: CorsConfig): void => {
 	const { origin, credentials, allowedHeaders, maxAge } = config;
-	logger.info(`Cors config: origin=${origin} credentials=${credentials} maxAge=${maxAge} allowedHeaders=${allowedHeaders}`);
-}
+	logger.info(
+		`Cors config: origin=${origin} credentials=${credentials} maxAge=${maxAge} allowedHeaders=${allowedHeaders}`
+	);
+};
 
 export const resolveCorsConfig = (jsonConfig: JsonConfig | undefined): CorsConfig => {
 	const configFromEnv = resolveCorsConfigFromEnvironment();
@@ -47,7 +50,7 @@ const resolveCorsConfigFromEnvironment = (): Partial<CorsConfig> => {
 		origin: process.env.CORS_ORIGIN,
 		credentials: strToBoolean(process.env.CORS_CREDENTIALS),
 		maxAge: strToNumber(process.env.CORS_MAX_AGE),
-		allowedHeaders: csvStrToStrArray(process.env.CORS_ALLOWED_HEADERS)
+		allowedHeaders: csvStrToStrArray(process.env.CORS_ALLOWED_HEADERS),
 	};
 };
 
@@ -58,11 +61,10 @@ const resolveCorsConfigFromJson = (jsonConfig: JsonConfig | undefined): Partial<
 
 	return {
 		...jsonConfig.cors,
-		allowedHeaders
+		allowedHeaders,
 	};
 };
 
 const validateCorsConfig = (config: Partial<CorsConfig>): void => {
 	// TODO
-}
-
+};

@@ -1,7 +1,8 @@
 import express from 'express';
+
+import { isTokenValid } from '../service/auth-service';
 import { SessionStore } from '../session-store/session-store';
 import { asyncRoute } from '../utils/express-utils';
-import { isTokenValid } from '../service/auth-service';
 
 interface SetupCallbackRouteParams {
 	app: express.Application;
@@ -11,13 +12,16 @@ interface SetupCallbackRouteParams {
 export const setupIsAuthenticatedRoute = (params: SetupCallbackRouteParams): void => {
 	const { app, sessionStore } = params;
 
-	app.get('/is-authenticated', asyncRoute(async (req, res) => {
-		const userTokenSet = await sessionStore.getUserTokenSet(req.sessionID);
+	app.get(
+		'/is-authenticated',
+		asyncRoute(async (req, res) => {
+			const userTokenSet = await sessionStore.getUserTokenSet(req.sessionID);
 
-		res.setHeader('cache-control', 'no-cache');
+			res.setHeader('cache-control', 'no-cache');
 
-		res.send({
-			isAuthenticated: isTokenValid(userTokenSet)
-		});
-	}));
+			res.send({
+				isAuthenticated: isTokenValid(userTokenSet),
+			});
+		})
+	);
 };

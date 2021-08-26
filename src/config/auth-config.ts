@@ -24,7 +24,7 @@ export interface TokenXConfig {
 export const logAuthConfig = (config: AuthConfig): void => {
 	const { authProvider, discoveryUrl, clientId } = config;
 	logger.info(`Auth config: authProvider=${authProvider} discoveryUrl=${discoveryUrl} clientId=${clientId}`);
-}
+};
 
 export const resolveOidcConfig = (jsonConfig: JsonConfig | undefined): AuthConfig => {
 	const authProviderFromEnv = resolveAuthProviderFromEnvironment();

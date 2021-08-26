@@ -1,22 +1,22 @@
+import bodyParser from 'body-parser';
 import corsMiddleware from 'cors';
 import express from 'express';
 import session from 'express-session';
-import bodyParser from 'body-parser';
 
-import { logger } from './utils/logger';
-import { setupInternalRoutes } from './route/internal';
 import { AppConfig, createAppConfig, logAppConfig } from './config/app-config-resolver';
-import { setupLoginRoute } from './route/login';
+import { StoreType } from './config/session-storage-config';
 import { setupCallbackRoute } from './route/callback';
-import { createClient, createIssuer } from './service/auth-service';
-import { createJWKS } from './utils/auth-utils';
-import { setupLogoutRoutes } from './route/logout';
+import { setupInternalRoutes } from './route/internal';
 import { setupIsAuthenticatedRoute } from './route/is-authenticated';
+import { setupLoginRoute } from './route/login';
+import { setupLogoutRoutes } from './route/logout';
 import { setupOboTestRoute } from './route/obo';
 import { setupProxyRoutes } from './route/proxy';
+import { createClient, createIssuer } from './service/auth-service';
 import { inMemorySessionStore } from './session-store/in-memory-session-store';
-import { StoreType } from './config/session-storage-config';
 import { createRedisSessionStore } from './session-store/redis-session-store';
+import { createJWKS } from './utils/auth-utils';
+import { logger } from './utils/logger';
 
 const app: express.Application = express();
 
@@ -41,18 +41,20 @@ async function startServer(appConfig: AppConfig) {
 			secure: sessionCookie.secure,
 			httpOnly: sessionCookie.httpOnly,
 			sameSite: sessionCookie.sameSite,
-			domain: sessionCookie.domain
+			domain: sessionCookie.domain,
 		},
 	});
 
 	app.use(bodyParser.urlencoded({ extended: true }));
 	app.use(sessionParser);
-	app.use(corsMiddleware({
-		origin: cors.origin,
-		credentials: cors.credentials,
-		maxAge: cors.maxAge,
-		allowedHeaders: cors.allowedHeaders
-	}));
+	app.use(
+		corsMiddleware({
+			origin: cors.origin,
+			credentials: cors.credentials,
+			maxAge: cors.maxAge,
+			allowedHeaders: cors.allowedHeaders,
+		})
+	);
 
 	const authIssuer = await createIssuer(auth.discoveryUrl);
 	const authClient = createClient(authIssuer, auth.clientId, createJWKS(auth.privateJwk));
@@ -64,9 +66,10 @@ async function startServer(appConfig: AppConfig) {
 		oboTokenClient = createClient(tokenXIssuer, auth.tokenX.clientId, createJWKS(auth.tokenX.privateJwk));
 	}
 
-	const sessionStore = sessionStorage.storeType === StoreType.IN_MEMORY
-		? inMemorySessionStore
-		: createRedisSessionStore(appConfig.sessionStorage);
+	const sessionStore =
+		sessionStorage.storeType === StoreType.IN_MEMORY
+			? inMemorySessionStore
+			: createRedisSessionStore(appConfig.sessionStorage);
 
 	setupInternalRoutes(app);
 

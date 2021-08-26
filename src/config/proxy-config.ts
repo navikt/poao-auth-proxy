@@ -1,5 +1,5 @@
-import { JsonConfig } from './app-config-resolver';
 import { logger } from '../utils/logger';
+import { JsonConfig } from './app-config-resolver';
 
 export interface ProxyConfig {
 	proxies: Proxy[];
@@ -13,11 +13,13 @@ export interface Proxy {
 }
 
 export const logProxyConfig = (proxyConfig: ProxyConfig): void => {
-	proxyConfig.proxies.forEach(proxy => {
+	proxyConfig.proxies.forEach((proxy) => {
 		const { from, to, appIdentifier, preserveContextPath } = proxy;
-		logger.info(`Proxy config entry: from=${from} to=${to} appIdentifier=${appIdentifier} preserveContextPath=${preserveContextPath}`);
+		logger.info(
+			`Proxy config entry: from=${from} to=${to} appIdentifier=${appIdentifier} preserveContextPath=${preserveContextPath}`
+		);
 	});
-}
+};
 
 export const resolveProxyConfig = (jsonConfig: JsonConfig | undefined): ProxyConfig => {
 	const config = resolveProxyConfigFromJson(jsonConfig);
@@ -54,12 +56,12 @@ const validateProxyConfig = (config: Partial<ProxyConfig>): void => {
 			throw new Error(`The field 'appIdentifier' is missing from: ${JSON.stringify(proxy)}`);
 		}
 
-		if (!proxy.from.startsWith("/")) {
+		if (!proxy.from.startsWith('/')) {
 			throw new Error(`'${proxy.from}' is not a relative path starting with '/'`);
 		}
 
-		if (proxy.from.startsWith("/internal")) {
+		if (proxy.from.startsWith('/internal')) {
 			throw new Error(`'${proxy.from}' cannot start with '/internal'`);
 		}
 	});
-}
+};

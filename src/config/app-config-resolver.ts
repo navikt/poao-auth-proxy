@@ -1,19 +1,12 @@
-import { resolveBaseConfig } from './base-config';
+import { existsSync, readFileSync } from 'fs';
+
 import { logger } from '../utils/logger';
-import { logAuthConfig, AuthConfig, resolveOidcConfig } from './auth-config';
+import { AuthConfig, logAuthConfig, resolveOidcConfig } from './auth-config';
+import { resolveBaseConfig } from './base-config';
 import { CorsConfig, logCorsConfig, resolveCorsConfig } from './cors-config';
-import { logProxyConfig, ProxyConfig, resolveProxyConfig } from './proxy-config';
-import {
-	logSessionCookieConfig,
-	resolveSessionCookieConfig,
-	SessionCookieConfig
-} from './session-cookie-config';
-import {
-	logSessionStorageConfig,
-	resolveSessionStorageConfig,
-	SessionStorageConfig,
-} from './session-storage-config';
-import { existsSync, readFileSync } from "fs";
+import { ProxyConfig, logProxyConfig, resolveProxyConfig } from './proxy-config';
+import { SessionCookieConfig, logSessionCookieConfig, resolveSessionCookieConfig } from './session-cookie-config';
+import { SessionStorageConfig, logSessionStorageConfig, resolveSessionStorageConfig } from './session-storage-config';
 
 export interface JsonConfig {
 	[key: string]: any;
@@ -50,7 +43,9 @@ export function createAppConfig(): AppConfig {
 }
 
 export function logAppConfig(appConfig: AppConfig): void {
-	logger.info(`Config: port=${appConfig.port} applicationName=${appConfig.applicationName} applicationUrl=${appConfig.applicationUrl}`);
+	logger.info(
+		`Config: port=${appConfig.port} applicationName=${appConfig.applicationName} applicationUrl=${appConfig.applicationUrl}`
+	);
 
 	logCorsConfig(appConfig.cors);
 	logAuthConfig(appConfig.auth);

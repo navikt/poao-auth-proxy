@@ -1,4 +1,5 @@
-import { generators, TokenSet } from 'openid-client';
+import { TokenSet, generators } from 'openid-client';
+
 import { assert } from './index';
 
 export const CALLBACK_PATH = '/oauth2/callback';
@@ -8,24 +9,26 @@ export const CALLBACK_PATH = '/oauth2/callback';
 const OBO_TOKEN_EXPIRE_BEFORE_SECONDS = 15;
 
 export interface JWKS {
-	keys: [{
-		kty: 'oct';
-	}],
+	keys: [
+		{
+			kty: 'oct';
+		}
+	];
 }
 
 export interface OidcTokenSet {
-	tokenType: string;      // Always "Bearer"
-	scope: string;          // Scopes (permissions) that the access_token has
-	expiresAt: number;      // Epoch ms timestamp for expiration
+	tokenType: string; // Always "Bearer"
+	scope: string; // Scopes (permissions) that the access_token has
+	expiresAt: number; // Epoch ms timestamp for expiration
 	accessToken: string;
 	idToken: string;
 }
 
 export interface OboToken {
-	tokenType: string;      // Always "Bearer"
-	scope: string;          // Scopes (permissions) that the OBO token has
-	expiresAt: number;      // Epoch ms timestamp for expiration
-	accessToken: string;    // The OBO token
+	tokenType: string; // Always "Bearer"
+	scope: string; // Scopes (permissions) that the OBO token has
+	expiresAt: number; // Epoch ms timestamp for expiration
+	accessToken: string; // The OBO token
 }
 
 export const generateState = (): string => {
@@ -44,7 +47,6 @@ export const generateCodeChallenge = (codeVerifier: string): string => {
 	return generators.codeChallenge(codeVerifier);
 };
 
-
 /**
  * Creates an app identifier that is used when requesting tokens for a given application
  * @param appClientId can either be of type 'e89006c5-7193-4ca3-8e26-d0990d9d981f' or 'dev-gcp.aura.nais-testapp'
@@ -60,9 +62,9 @@ export const createJWKS = (jwkJson: string): JWKS => {
 	delete jwk.x5c;
 
 	return {
-		keys: [jwk]
-	}
-}
+		keys: [jwk],
+	};
+};
 
 export const getExpiresInSeconds = (expiresAtEpochMs: number): number => {
 	const expiresInMs = expiresAtEpochMs - new Date().getMilliseconds();

@@ -1,11 +1,12 @@
-import { logger } from '../utils/logger';
 import merge from 'lodash.merge';
+
 import { strToBoolean, strToEnum, strToNumber } from '../utils';
+import { logger } from '../utils/logger';
 import { JsonConfig } from './app-config-resolver';
 
 enum SameSite {
 	LAX = 'lax',
-	STRICT = 'strict'
+	STRICT = 'strict',
 }
 
 const DEFAULT_SESSION_COOKIE_MAX_AGE = 43_200_000; // 12 hours
@@ -25,10 +26,15 @@ export interface SessionCookieConfig {
 
 export const logSessionCookieConfig = (config: SessionCookieConfig): void => {
 	const { name, maxAge, secure, httpOnly, sameSite } = config;
-	logger.info(`Session cookie config: name=${name} maxAge=${maxAge} secure=${secure} httpOnly=${httpOnly} sameSite=${sameSite}`);
-}
+	logger.info(
+		`Session cookie config: name=${name} maxAge=${maxAge} secure=${secure} httpOnly=${httpOnly} sameSite=${sameSite}`
+	);
+};
 
-export const resolveSessionCookieConfig = (applicationName: string, jsonConfig: JsonConfig | undefined): SessionCookieConfig => {
+export const resolveSessionCookieConfig = (
+	applicationName: string,
+	jsonConfig: JsonConfig | undefined
+): SessionCookieConfig => {
 	const configFromEnv = resolveSessionCookieConfigFromEnvironment();
 	const configFromJson = resolveSessionCookieConfigFromJson(jsonConfig);
 
@@ -67,7 +73,7 @@ const resolveSessionCookieConfigFromEnvironment = (): Partial<SessionCookieConfi
 		secure: strToBoolean(process.env.SESSION_COOKIE_SECURE),
 		httpOnly: strToBoolean(process.env.SESSION_COOKIE_HTTP_ONLY),
 		sameSite: strToEnum(process.env.SESSION_COOKIE_SAME_SITE, SameSite),
-		domain: process.env.SESSION_COOKIE_DOMAIN
+		domain: process.env.SESSION_COOKIE_DOMAIN,
 	};
 };
 
@@ -80,7 +86,7 @@ const validateSessionCookieConfig = (config: Partial<SessionCookieConfig>): void
 	if (!config.secret) {
 		throw new Error(`'Session cookie secret' is missing`);
 	}
-}
+};
 
 const createSessionCookieName = (applicationName: string): string => {
 	return `${applicationName}_session`;
