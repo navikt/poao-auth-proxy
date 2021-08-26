@@ -7,7 +7,7 @@ import {
 	JWKS,
 	OboToken,
 	OidcTokenSet,
-	createAzureAdAppIdentifierFromClientId,
+	createAzureAdAppIdFromClientId,
 	tokenSetToOboToken,
 } from '../utils/auth-utils';
 import { logger } from '../utils/logger';
@@ -38,7 +38,7 @@ export function createAzureAdAuthorizationUrl(params: {
 	nonce: string;
 	codeChallenge: string;
 }): string {
-	const authProxyAppIdentifier = createAzureAdAppIdentifierFromClientId(params.clientId);
+	const authProxyAppIdentifier = createAzureAdAppIdFromClientId(params.clientId);
 
 	return params.client.authorizationUrl({
 		response_mode: 'form_post',

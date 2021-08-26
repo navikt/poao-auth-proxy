@@ -6,17 +6,25 @@ export interface ProxyConfig {
 }
 
 export interface Proxy {
-	from: string; // Must be a relative path
-	to: string;
-	appIdentifier: string;
-	preserveContextPath?: boolean;
+	fromPath: string;
+	toUrl: string;
+	toApp: ProxyApp;
+	preserveFromPath?: boolean; // If true, 'fromPath' will be prepended to the request path before sending to 'toUrl'
+}
+
+export interface ProxyApp {
+	name: string;
+	namespace: string;
+	cluster: string;
 }
 
 export const logProxyConfig = (proxyConfig: ProxyConfig): void => {
 	proxyConfig.proxies.forEach((proxy) => {
-		const { from, to, appIdentifier, preserveContextPath } = proxy;
+		const { fromPath, toUrl, toApp, preserveFromPath } = proxy;
+		const appId = `${toApp.cluster}.${toApp.namespace}.${toApp.name}`;
+
 		logger.info(
-			`Proxy config entry: from=${from} to=${to} appIdentifier=${appIdentifier} preserveContextPath=${preserveContextPath}`
+			`Proxy config entry: fromPath=${fromPath} toUrl=${toUrl} app=${appId} preserveContextPath=${preserveFromPath}`
 		);
 	});
 };
@@ -44,24 +52,38 @@ const validateProxyConfig = (config: Partial<ProxyConfig>): void => {
 	}
 
 	config.proxies.forEach((proxy) => {
-		if (!proxy.from) {
-			throw new Error(`The field 'from' is missing from: ${JSON.stringify(proxy)}`);
+		const proxyJson = JSON.stringify(proxy);
+
+		if (!proxy.fromPath) {
+			throw new Error(`The field 'fromPath' is missing from: ${proxyJson}`);
 		}
 
-		if (!proxy.to) {
-			throw new Error(`The field 'to' is missing from: ${JSON.stringify(proxy)}`);
+		if (!proxy.fromPath.startsWith('/')) {
+			throw new Error(`'${proxy.fromPath}' is not a relative path starting with '/'`);
 		}
 
-		if (!proxy.appIdentifier) {
-			throw new Error(`The field 'appIdentifier' is missing from: ${JSON.stringify(proxy)}`);
+		if (proxy.fromPath.startsWith('/internal')) {
+			throw new Error(`'${proxy.fromPath}' cannot start with '/internal'`);
 		}
 
-		if (!proxy.from.startsWith('/')) {
-			throw new Error(`'${proxy.from}' is not a relative path starting with '/'`);
+		if (!proxy.toUrl) {
+			throw new Error(`The field 'toUrl' is missing from: ${proxyJson}`);
 		}
 
-		if (proxy.from.startsWith('/internal')) {
-			throw new Error(`'${proxy.from}' cannot start with '/internal'`);
+		if (!proxy.toApp) {
+			throw new Error(`The field 'toApp' is missing from: ${proxyJson}`);
+		}
+
+		if (!proxy.toApp.name) {
+			throw new Error(`The field 'toApp.name' is missing from: ${proxyJson}`);
+		}
+
+		if (!proxy.toApp.namespace) {
+			throw new Error(`The field 'toApp.namespace' is missing from: ${proxyJson}`);
+		}
+
+		if (!proxy.toApp.cluster) {
+			throw new Error(`The field 'toApp.cluster' is missing from: ${proxyJson}`);
 		}
 	});
 };

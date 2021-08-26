@@ -1,4 +1,4 @@
-import express, { Request } from 'express';
+import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { Client } from 'openid-client';
 import urlJoin from 'url-join';
@@ -6,7 +6,7 @@ import urlJoin from 'url-join';
 import { AppConfig } from '../config/app-config-resolver';
 import { createAzureAdOnBehalfOfToken, createTokenXOnBehalfOfToken, isTokenValid } from '../service/auth-service';
 import { SessionStore } from '../session-store/session-store';
-import { createAzureAdAppIdentifierFromClientId } from '../utils/auth-utils';
+import { createAzureAdAppId, createTokenXAppId } from '../utils/auth-utils';
 import { asyncMiddleware } from '../utils/express-utils';
 import { logger } from '../utils/logger';
 
@@ -23,12 +23,11 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 	const { app, appConfig, sessionStore, oboTokenClient } = params;
 
 	appConfig.proxy.proxies.forEach((proxy) => {
-		const proxyFrom = urlJoin(PROXY_BASE_PATH, proxy.from);
+		const proxyFrom = urlJoin(PROXY_BASE_PATH, proxy.fromPath);
 
-		// TODO: Rename AppIdentifier
-		const appIdentifier = appConfig.auth.tokenX
-			? proxy.appIdentifier
-			: createAzureAdAppIdentifierFromClientId(proxy.appIdentifier);
+		const appId = appConfig.auth.tokenX
+			? createTokenXAppId(proxy.toApp)
+			: createAzureAdAppId(proxy.toApp);
 
 		app.use(
 			proxyFrom,
@@ -40,7 +39,7 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 					return;
 				}
 
-				let oboToken = await sessionStore.getUserOboToken(req.sessionID, appIdentifier);
+				let oboToken = await sessionStore.getUserOboToken(req.sessionID, appId);
 
 				logger.info('Cached obo token: ' + oboToken ? JSON.stringify(oboToken) : undefined);
 
@@ -48,17 +47,17 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 					const oboTokenPromise = appConfig.auth.tokenX
 						? createTokenXOnBehalfOfToken(
 								oboTokenClient,
-								appIdentifier,
+								appId,
 								userTokenSet.accessToken,
 								appConfig.auth.tokenX
 						  )
-						: createAzureAdOnBehalfOfToken(oboTokenClient, appIdentifier, userTokenSet.accessToken);
+						: createAzureAdOnBehalfOfToken(oboTokenClient, appId, userTokenSet.accessToken);
 
 					oboToken = await oboTokenPromise;
 
 					logger.info('New obo: ' + JSON.stringify(oboToken));
 
-					await sessionStore.setUserOboToken(req.sessionID, appIdentifier, oboToken);
+					await sessionStore.setUserOboToken(req.sessionID, appId, oboToken);
 				}
 
 				req.headers['Authorization'] = `Bearer ${oboToken.accessToken}`;
@@ -66,11 +65,11 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 				next();
 			}),
 			createProxyMiddleware(proxyFrom, {
-				target: proxy.to,
+				target: proxy.toUrl,
 				logLevel: 'debug',
 				logProvider: () => logger,
 				changeOrigin: true,
-				pathRewrite: proxy.preserveContextPath
+				pathRewrite: proxy.preserveFromPath
 					? undefined
 					: {
 							[`^${proxyFrom}`]: '',
