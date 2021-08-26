@@ -1,6 +1,5 @@
-import { TokenSet } from 'openid-client';
 import redis from 'redis';
-import { LoginState, SessionStore } from './session-store';
+import { LOGIN_STATE_TIMEOUT_AFTER_SECONDS, LoginState, SessionStore } from './session-store';
 import { logger } from '../logger';
 import { promisify } from 'util';
 import { SessionStorageConfig } from '../config/session-storage-config';
@@ -47,13 +46,8 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 				});
 		},
 		setLoginState(id: string, loginState: LoginState): Promise<void> {
-			return setAsync(createLoginStateKey(id), JSON.stringify(loginState))
-				.catch(err => {
-					logger.error(err);
-				});
-		},
-		destroyLoginState(id: string): Promise<void> {
-			return delAsync(createLoginStateKey(id))
+			return setexAsync(createLoginStateKey(id), LOGIN_STATE_TIMEOUT_AFTER_SECONDS, JSON.stringify(loginState))
+				.then(() => {})
 				.catch(err => {
 					logger.error(err);
 				});

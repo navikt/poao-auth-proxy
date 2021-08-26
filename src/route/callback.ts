@@ -61,9 +61,6 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 			.catch((error) => {
 				logger.error('Feil ved callback', error)
 				res.status(500).send('An unexpected error happened logging in');
-			})
-			.finally(() => {
-				sessionStore.destroyLoginState(params.state!!);
 			});
 	}));
 };

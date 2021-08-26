@@ -1,8 +1,7 @@
-import { TokenSet } from 'openid-client';
-import { LoginState, SessionStore } from './session-store';
-import { OboToken, OidcTokenSet } from '../utils/auth-utils';
+import { LOGIN_STATE_TIMEOUT_AFTER_SECONDS, LoginState, SessionStore } from './session-store';
+import { getAdjustedExpireInSeconds, getExpiresInSeconds, OboToken, OidcTokenSet } from '../utils/auth-utils';
 
-// NB: This SessionStore implementation leaks memory and is unsafe to use in production
+// NB: This SessionStore implementation is unsafe to use in production
 
 const store: {
 	loginState: { [key: string]: any;  }
@@ -21,11 +20,12 @@ export const inMemorySessionStore: SessionStore = {
 		return Promise.resolve(store.loginState[id]);
 	},
 	setLoginState(id: string, loginState: LoginState): Promise<void> {
+		setTimeout(() => {
+			delete store.loginState[id];
+		}, LOGIN_STATE_TIMEOUT_AFTER_SECONDS * 1000);
+
 		store.loginState[id] = loginState;
-		return Promise.resolve();
-	},
-	destroyLoginState(id: string): Promise<void> {
-		delete store.loginState[id];
+
 		return Promise.resolve();
 	},
 
@@ -66,6 +66,13 @@ export const inMemorySessionStore: SessionStore = {
 		if (!store.oboTokens[sessionId]) {
 			store.oboTokens[sessionId] = {};
 		}
+
+		const expiresInSeconds = getExpiresInSeconds(oboToken.expiresAt);
+		const adjustedExpiresInSeconds = getAdjustedExpireInSeconds(expiresInSeconds);
+
+		setTimeout(() => {
+			delete store.oboTokens[sessionId][appIdentifier];
+		}, adjustedExpiresInSeconds * 1000);
 
 		store.oboTokens[sessionId][appIdentifier] = oboToken;
 
