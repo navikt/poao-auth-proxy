@@ -3,6 +3,7 @@ import merge from 'lodash.merge';
 import { strToEnum, strToNumber } from '../utils';
 import { logger } from '../utils/logger';
 import { JsonConfig } from './app-config-resolver';
+import { resolveWithExtension } from '../utils/environment-utils';
 
 export enum StoreType {
 	REDIS = 'REDIS',
@@ -51,7 +52,7 @@ const resolveSessionStorageConfigFromEnvironment = (): Partial<SessionStorageCon
 		storeType: strToEnum(process.env.SESSION_STORAGE_STORE_TYPE, StoreType),
 		redisHost: process.env.SESSION_STORAGE_REDIS_HOST,
 		redisPort: strToNumber(process.env.SESSION_STORAGE_REDIS_PORT),
-		redisPassword: process.env.SESSION_STORAGE_REDIS_PASSWORD,
+		redisPassword: resolveWithExtension(process.env.SESSION_STORAGE_REDIS_PASSWORD),
 	};
 };
 
