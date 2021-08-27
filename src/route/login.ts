@@ -37,7 +37,7 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 		'/login',
 		asyncRoute(async (req, res) => {
 			const redirectUri = getRedirectUriFromQuery(appConfig.applicationUrl, req);
-			const userTokenSet = await sessionStore.getUserTokenSet(req.sessionID);
+			const userTokenSet = await sessionStore.getOidcTokenSet(req.sessionID);
 
 			if (!endsWithOneOf(redirectUri, ALLOWED_REDIRECT_HOSTNAMES)) {
 				res.status(400).send(`${redirectUri} is not valid`);

@@ -32,7 +32,7 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 		app.use(
 			proxyFrom,
 			asyncMiddleware(async (req, res, next) => {
-				const userTokenSet = await sessionStore.getUserTokenSet(req.sessionID);
+				const userTokenSet = await sessionStore.getOidcTokenSet(req.sessionID);
 
 				if (!userTokenSet || !isTokenValid(userTokenSet)) {
 					res.sendStatus(401);

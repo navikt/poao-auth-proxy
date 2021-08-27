@@ -9,7 +9,7 @@ import { LOGIN_STATE_TIMEOUT_AFTER_SECONDS, LoginState, SessionStore } from './s
 
 const createLoginStateKey = (id: string): string => `loginState.${id}`;
 
-const createUserTokensKey = (sessionId: string): string => `sessionId.${sessionId}`;
+const createOidcTokenSetKey = (sessionId: string): string => `oidcTokenSet.${sessionId}`;
 
 const createAuthProviderSessionKey = (authProviderSid: string): string => `authProviderSid.${authProviderSid}`;
 
@@ -24,8 +24,9 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 	});
 
 	const getAsync = promisify(client.get).bind(client);
-	const setAsync = promisify(client.set).bind(client) as (key: string, value: string) => Promise<void>;
+
 	const setexAsync = promisify(client.setex).bind(client);
+
 	const delAsync = (key: string): Promise<void> => {
 		return new Promise((resolve, reject) => {
 			client.del(key, (err, reply) => {
@@ -67,10 +68,12 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 					return undefined;
 				});
 		},
-		setLogoutSessionId(oidcSessionId: string, sessionId: string): Promise<void> {
-			return setAsync(createAuthProviderSessionKey(oidcSessionId), sessionId).catch((err) => {
-				logger.error(err);
-			});
+		setLogoutSessionId(oidcSessionId: string, expiresInSeconds: number, sessionId: string): Promise<void> {
+			return setexAsync(createAuthProviderSessionKey(oidcSessionId), expiresInSeconds, sessionId)
+				.then(() => {})
+				.catch((err) => {
+					logger.error(err);
+				});
 		},
 		destroyLogoutSessionId(oidcSessionId: string): Promise<void> {
 			return delAsync(createAuthProviderSessionKey(oidcSessionId)).catch((err) => {
@@ -78,8 +81,8 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 			});
 		},
 
-		getUserTokenSet(sessionId: string): Promise<OidcTokenSet | undefined> {
-			return getAsync(createUserTokensKey(sessionId))
+		getOidcTokenSet(sessionId: string): Promise<OidcTokenSet | undefined> {
+			return getAsync(createOidcTokenSetKey(sessionId))
 				.then((data) => {
 					return data ? JSON.parse(data) : undefined;
 				})
@@ -88,13 +91,17 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 					return undefined;
 				});
 		},
-		setUserTokenSet(sessionId: string, tokenSet: OidcTokenSet): Promise<void> {
-			return setAsync(createUserTokensKey(sessionId), JSON.stringify(tokenSet)).catch((err) => {
-				logger.error(err);
-			});
+		setOidcTokenSet(sessionId: string, tokenSet: OidcTokenSet): Promise<void> {
+			const expiresInSeconds = getExpiresInSeconds(tokenSet.expiresAt);
+
+			return setexAsync(createOidcTokenSetKey(sessionId), expiresInSeconds, JSON.stringify(tokenSet))
+				.then(() => {})
+				.catch((err) => {
+					logger.error(err);
+				});
 		},
-		destroyUserTokenSet(sessionId: string): Promise<void> {
-			return delAsync(createUserTokensKey(sessionId)).catch((err) => {
+		destroyOidcTokenSet(sessionId: string): Promise<void> {
+			return delAsync(createOidcTokenSetKey(sessionId)).catch((err) => {
 				logger.error(err);
 			});
 		},

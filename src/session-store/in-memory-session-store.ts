@@ -20,11 +20,11 @@ export const inMemorySessionStore: SessionStore = {
 		return Promise.resolve(store.loginState[id]);
 	},
 	setLoginState(id: string, loginState: LoginState): Promise<void> {
+		store.loginState[id] = loginState;
+
 		setTimeout(() => {
 			delete store.loginState[id];
 		}, LOGIN_STATE_TIMEOUT_AFTER_SECONDS * 1000);
-
-		store.loginState[id] = loginState;
 
 		return Promise.resolve();
 	},
@@ -32,8 +32,13 @@ export const inMemorySessionStore: SessionStore = {
 	getLogoutSessionId(oidcSessionId: string): Promise<string | undefined> {
 		return Promise.resolve(store.idProviderSession[oidcSessionId]);
 	},
-	setLogoutSessionId(oidcSessionId: string, sessionId: string): Promise<void> {
+	setLogoutSessionId(oidcSessionId: string, expiresInSeconds: number, sessionId: string): Promise<void> {
 		store.idProviderSession[oidcSessionId] = sessionId;
+
+		setTimeout(() => {
+			delete store.idProviderSession[oidcSessionId];
+		}, expiresInSeconds * 1000);
+
 		return Promise.resolve(undefined);
 	},
 	destroyLogoutSessionId(oidcSessionId: string): Promise<void> {
@@ -41,14 +46,21 @@ export const inMemorySessionStore: SessionStore = {
 		return Promise.resolve();
 	},
 
-	getUserTokenSet(sessionId: string): Promise<OidcTokenSet | undefined> {
+	getOidcTokenSet(sessionId: string): Promise<OidcTokenSet | undefined> {
 		return Promise.resolve(store.userTokens[sessionId]?.tokenSet);
 	},
-	setUserTokenSet(sessionId: string, tokenSet: OidcTokenSet): Promise<void> {
+	setOidcTokenSet(sessionId: string, tokenSet: OidcTokenSet): Promise<void> {
 		store.userTokens[sessionId] = { tokenSet };
+
+		const expiresInSeconds = getExpiresInSeconds(tokenSet.expiresAt);
+
+		setTimeout(() => {
+			delete store.userTokens[sessionId];
+		}, expiresInSeconds * 1000);
+
 		return Promise.resolve();
 	},
-	destroyUserTokenSet(sessionId: string): Promise<void> {
+	destroyOidcTokenSet(sessionId: string): Promise<void> {
 		delete store.userTokens[sessionId];
 		return Promise.resolve();
 	},
@@ -68,11 +80,11 @@ export const inMemorySessionStore: SessionStore = {
 		const expiresInSeconds = getExpiresInSeconds(oboToken.expiresAt);
 		const adjustedExpiresInSeconds = getAdjustedExpireInSeconds(expiresInSeconds);
 
+		store.oboTokens[sessionId][appIdentifier] = oboToken;
+
 		setTimeout(() => {
 			delete store.oboTokens[sessionId][appIdentifier];
 		}, adjustedExpiresInSeconds * 1000);
-
-		store.oboTokens[sessionId][appIdentifier] = oboToken;
 
 		return Promise.resolve();
 	},

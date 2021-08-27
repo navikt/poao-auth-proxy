@@ -1,6 +1,6 @@
 import { TokenSet, generators } from 'openid-client';
 
-import { assert } from './index';
+import { assert, fromBase64 } from './index';
 import { ProxyApp } from '../config/proxy-config';
 
 export const CALLBACK_PATH = '/oauth2/callback';
@@ -83,6 +83,24 @@ export const getExpiresInSeconds = (expiresAtEpochMs: number): number => {
 export const getAdjustedExpireInSeconds = (expiresInSeconds: number): number => {
 	return expiresInSeconds - OBO_TOKEN_EXPIRE_BEFORE_SECONDS;
 };
+
+export const getTokenSid = (jwtTokenStr: string): string | undefined => {
+	const tokenBody = getTokenBodyObject(jwtTokenStr);
+	return tokenBody.sid;
+}
+
+const getTokenBodyObject = (jwtTokenStr: string): { [key: string]: any } => {
+	const tokenParts = jwtTokenStr.split('.');
+
+	// All signed JWT tokens should have 3 parts
+	if (tokenParts.length !== 3) {
+		throw new Error('Invalid token');
+	}
+
+	const bodyPartJson = fromBase64(tokenParts[1]);
+
+	return JSON.parse(bodyPartJson);
+}
 
 export const tokenSetToOboToken = (tokenSet: TokenSet): OboToken => {
 	return {

@@ -27,7 +27,7 @@ export const setupOboTestRoute = (params: SetupOboTestRouteParams): void => {
 				return;
 			}
 
-			const userTokenSet = await sessionStore.getUserTokenSet(req.sessionID);
+			const userTokenSet = await sessionStore.getOidcTokenSet(req.sessionID);
 
 			if (!userTokenSet) {
 				res.status(401).send();

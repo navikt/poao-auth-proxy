@@ -15,17 +15,30 @@ export const setupLogoutRoutes = (params: SetupLogoutRoutesParams): void => {
 	app.use(
 		'/oauth2/logout',
 		asyncRoute(async (req, res) => {
-			// TODO: frontchannel logout
+			const sid = req.query.sid as string | undefined;
 
-			await sessionStore.destroyUserTokenSet(req.sessionID);
+			if (sid) {
+				// Frontchannel logout initiated from ID-porten
+				logger.info('Starting frontchannel logout for sid:' + sid);
 
-			req.session.destroy((error) => {
-				if (error) {
-					logger.error('Feil ved destroy av session', error);
+				const sessionId = await sessionStore.getLogoutSessionId(sid);
+
+				if (sessionId) {
+					await sessionStore.destroyOidcTokenSet(sessionId);
 				}
-			});
 
-			// TODO: redirect
+				await sessionStore.destroyLogoutSessionId(sid);
+			} else {
+				// User initiated logout
+
+				await sessionStore.destroyOidcTokenSet(req.sessionID);
+
+				req.session.destroy((error) => {
+					if (error) {
+						logger.error('Error occurred while destroying session', error);
+					}
+				});
+			}
 
 			res.sendStatus(204);
 		})

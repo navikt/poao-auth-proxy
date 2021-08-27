@@ -4,9 +4,10 @@ import { Client } from 'openid-client';
 import { AppConfig } from '../config/app-config-resolver';
 import { createLoginRedirectUrl, createUserRedirectUrl } from '../service/auth-service';
 import { SessionStore } from '../session-store/session-store';
-import { CALLBACK_PATH, tokenSetToOidcTokenSet } from '../utils/auth-utils';
+import { CALLBACK_PATH, getExpiresInSeconds, getTokenSid, tokenSetToOidcTokenSet } from '../utils/auth-utils';
 import { asyncRoute } from '../utils/express-utils';
 import { logger } from '../utils/logger';
+import { LoginProvider } from '../config/auth-config';
 
 interface SetupCallbackRouteParams {
 	app: express.Application;
@@ -57,9 +58,21 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 					}
 				)
 				.then(async (tokenSet) => {
-					// TODO: Store sid with session Id for ID_PORTEN
+					const oidcTokenSet = tokenSetToOidcTokenSet(tokenSet);
 
-					await sessionStore.setUserTokenSet(req.sessionID, tokenSetToOidcTokenSet(tokenSet));
+					if (appConfig.auth.loginProvider === LoginProvider.ID_PORTEN) {
+						const oidcSessionId = getTokenSid(oidcTokenSet.idToken);
+
+						if (!oidcSessionId) {
+							throw new Error('"sid"-claim is missing from id_token');
+						}
+
+						const expiresInSeconds = getExpiresInSeconds(oidcTokenSet.expiresAt)
+
+						await sessionStore.setLogoutSessionId(oidcSessionId, expiresInSeconds, req.sessionID);
+					}
+
+					await sessionStore.setOidcTokenSet(req.sessionID, tokenSetToOidcTokenSet(tokenSet));
 
 					const redirectUri = createUserRedirectUrl(appConfig.applicationUrl, loginState.redirectUri);
 

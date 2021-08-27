@@ -36,6 +36,10 @@ export const csvStrToStrArray = (str: string | undefined): string[] | undefined 
 	return str.split(',').map((v) => v.trim());
 };
 
+export const fromBase64 = (base64Str: string): string => {
+	return new Buffer(base64Str, 'base64').toString('ascii')
+};
+
 /**
  * Safely coerces a string into a enum if the string is part of the enum's value set
  * @param str string to coerce
