@@ -24,13 +24,13 @@ const resolveEnvExtension = (value: string): string | undefined => {
 	return process.env[envVarName];
 };
 
-const resolveFileExtension = (value: string): string | undefined => {
+const resolveFileExtension = (value: string): string => {
 	const filePath = value.substring(fileExtensionPrefix.length);
 
 	try {
 		return readFileSync(filePath).toString();
 	} catch (e) {
 		logger.error('Failed to value with file extension: ' + value);
-		return undefined;
+		throw new Error('Unable to read env value from file: ' + filePath);
 	}
 };
