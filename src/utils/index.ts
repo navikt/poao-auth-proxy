@@ -37,7 +37,7 @@ export const csvStrToStrArray = (str: string | undefined): string[] | undefined 
 };
 
 export const fromBase64 = (base64Str: string): string => {
-	return new Buffer(base64Str, 'base64').toString('ascii')
+	return Buffer.from(base64Str, 'base64').toString('ascii')
 };
 
 /**
