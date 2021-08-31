@@ -153,5 +153,5 @@ export const safeRedirectUri = (applicationUrl: string, redirectUri: string | un
 		return applicationUrl;
 	}
 
-	return applicationUrl;
+	return redirectUri;
 };
