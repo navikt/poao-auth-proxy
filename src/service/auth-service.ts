@@ -11,6 +11,7 @@ import {
 	tokenSetToOboToken,
 } from '../utils/auth-utils';
 import { logger } from '../utils/logger';
+import { endsWithOneOf } from '../utils/url-utils';
 
 export const ALLOWED_REDIRECT_HOSTNAMES = ['nav.no'];
 
@@ -138,20 +139,19 @@ export const isTokenValid = (tokenSet: OidcTokenSet | undefined): boolean => {
 	return true;
 };
 
-export const createUserRedirectUrl = (applicationUrl: string, redirectUrl: string | undefined): string => {
-	if (!redirectUrl) {
-		return applicationUrl;
-	} else if (redirectUrl.startsWith(applicationUrl)) {
-		return redirectUrl;
-	} else {
-		logger.warning(`Ikke white listed redirect_uri '${redirectUrl}'`);
-		return `${applicationUrl}?error=redirect_uri_rejected`;
-	}
-};
-
 export const createLoginRedirectUrl = (applicationUrl: string, callbackPath: string): string => {
 	return urlJoin(applicationUrl, callbackPath);
 };
 
-export const getRedirectUriFromQuery = (applicationUrl: string, request: Request) =>
-	createUserRedirectUrl(applicationUrl, request.query.redirect_uri as string | undefined);
+export const safeRedirectUri = (applicationUrl: string, redirectUri: string | undefined) => {
+	if (!redirectUri) {
+		return applicationUrl;
+	}
+
+	if (!endsWithOneOf(redirectUri, ALLOWED_REDIRECT_HOSTNAMES)) {
+		logger.warn(`${redirectUri} is not valid, defaulting to application url: ${applicationUrl}`);
+		return applicationUrl;
+	}
+
+	return applicationUrl;
+};

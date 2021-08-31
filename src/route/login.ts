@@ -8,7 +8,7 @@ import {
 	createAzureAdAuthorizationUrl,
 	createIdPortenAuthorizationUrl,
 	createLoginRedirectUrl,
-	getRedirectUriFromQuery,
+	safeRedirectUri,
 	isTokenValid,
 } from '../service/auth-service';
 import { SessionStore } from '../session-store/session-store';
@@ -36,13 +36,8 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 	app.get(
 		'/login',
 		asyncRoute(async (req, res) => {
-			const redirectUri = getRedirectUriFromQuery(appConfig.applicationUrl, req);
+			const redirectUri = safeRedirectUri(appConfig.applicationUrl, req.query.redirect_uri as string | undefined);
 			const userTokenSet = await sessionStore.getOidcTokenSet(req.sessionID);
-
-			if (!endsWithOneOf(redirectUri, ALLOWED_REDIRECT_HOSTNAMES)) {
-				res.status(400).send(`${redirectUri} is not valid`);
-				return;
-			}
 
 			if (isTokenValid(userTokenSet)) {
 				res.redirect(redirectUri);
