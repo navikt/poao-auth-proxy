@@ -1,15 +1,8 @@
-import { Request } from 'express';
 import { Client, Issuer } from 'openid-client';
 import urlJoin from 'url-join';
 
 import { TokenXConfig } from '../config/auth-config';
-import {
-	JWKS,
-	OboToken,
-	OidcTokenSet,
-	createAzureAdAppIdFromClientId,
-	tokenSetToOboToken,
-} from '../utils/auth-utils';
+import { createAzureAdAppIdFromClientId, JWKS, OboToken, OidcTokenSet, tokenSetToOboToken } from '../utils/auth-utils';
 import { logger } from '../utils/logger';
 import { endsWithOneOf } from '../utils/url-utils';
 
@@ -135,8 +128,7 @@ export const isTokenValid = (tokenSet: OidcTokenSet | undefined): boolean => {
 		return false;
 	}
 
-	// TODO: check expiration etc
-	return true;
+	return tokenSet.expiresAt > new Date().getMilliseconds();
 };
 
 export const createLoginRedirectUrl = (applicationUrl: string, callbackPath: string): string => {
