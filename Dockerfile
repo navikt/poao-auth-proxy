@@ -9,6 +9,8 @@ RUN npm run build
 
 FROM node:14-alpine
 
+LABEL org.opencontainers.image.source=https://github.com/navikt/poao-auth-proxy
+
 WORKDIR /app
 
 COPY --from=builder /app/build .
