@@ -4,7 +4,6 @@ import { Client } from 'openid-client';
 import { AppConfig } from '../config/app-config-resolver';
 import { LoginProvider } from '../config/auth-config';
 import {
-	ALLOWED_REDIRECT_HOSTNAMES,
 	createAzureAdAuthorizationUrl,
 	createIdPortenAuthorizationUrl,
 	createLoginRedirectUrl,
@@ -21,7 +20,6 @@ import {
 } from '../utils/auth-utils';
 import { asyncRoute } from '../utils/express-utils';
 import { logger } from '../utils/logger';
-import { endsWithOneOf } from '../utils/url-utils';
 
 interface SetupLoginRouteParams {
 	app: express.Application;
@@ -34,7 +32,7 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 	const { app, appConfig, sessionStore, authClient } = params;
 
 	app.get(
-		'/login',
+		'/oauth2/login',
 		asyncRoute(async (req, res) => {
 			const redirectUri = safeRedirectUri(appConfig.applicationUrl, req.query.redirect_uri as string | undefined);
 			const userTokenSet = await sessionStore.getOidcTokenSet(req.sessionID);
