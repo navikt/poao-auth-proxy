@@ -38,6 +38,7 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 			const userTokenSet = await sessionStore.getOidcTokenSet(req.sessionID);
 
 			if (isTokenValid(userTokenSet)) {
+				logger.info('User is already logged in, redirecting...');
 				res.redirect(redirectUri);
 			} else {
 				const codeVerifier = generateCodeVerifier();
@@ -66,9 +67,7 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 						? createAzureAdAuthorizationUrl(authorizationUrlParams)
 						: createIdPortenAuthorizationUrl(authorizationUrlParams);
 
-				// TODO: Remove later
-				logger.info('Session id login: ' + req.sessionID);
-				logger.info('Redirecting to authorization url: ' + authorizationUrl);
+				logger.info('Starter innlogging av bruker');
 
 				res.redirect(authorizationUrl);
 			}

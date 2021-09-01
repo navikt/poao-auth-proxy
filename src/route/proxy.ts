@@ -32,6 +32,8 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 		app.use(
 			proxyFrom,
 			asyncMiddleware(async (req, res, next) => {
+				logger.info(`Proxyer request ${req.path} til applikasjon ${proxy.toApp.name}`);
+
 				const userTokenSet = await sessionStore.getOidcTokenSet(req.sessionID);
 
 				if (!userTokenSet || !isTokenValid(userTokenSet)) {
@@ -40,8 +42,6 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 				}
 
 				let oboToken = await sessionStore.getUserOboToken(req.sessionID, appId);
-
-				logger.info('Cached obo token: ' + oboToken ? JSON.stringify(oboToken) : undefined);
 
 				if (!oboToken) {
 					const oboTokenPromise = appConfig.auth.tokenX
@@ -54,8 +54,6 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 						: createAzureAdOnBehalfOfToken(oboTokenClient, appId, userTokenSet.accessToken);
 
 					oboToken = await oboTokenPromise;
-
-					logger.info('New obo: ' + JSON.stringify(oboToken));
 
 					await sessionStore.setUserOboToken(req.sessionID, appId, oboToken);
 				}

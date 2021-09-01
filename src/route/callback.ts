@@ -24,10 +24,6 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 		asyncRoute(async (req, res) => {
 			const params = authClient.callbackParams(req);
 
-			// TODO: Remove later
-			logger.info('SessionId: ' + req.sessionID);
-			logger.info('Callback params: ' + JSON.stringify(params));
-
 			if (!params.state) {
 				logger.error('State is missing from callback');
 				res.sendStatus(400);

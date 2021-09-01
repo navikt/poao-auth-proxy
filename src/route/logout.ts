@@ -19,7 +19,7 @@ export const setupLogoutRoutes = (params: SetupLogoutRoutesParams): void => {
 
 			if (sid) {
 				// Frontchannel logout initiated from ID-porten
-				logger.info('Starting frontchannel logout for sid:' + sid);
+				logger.info('Starter frontchannel utlogging for sid:' + sid);
 
 				const sessionId = await sessionStore.getLogoutSessionId(sid);
 
@@ -30,6 +30,7 @@ export const setupLogoutRoutes = (params: SetupLogoutRoutesParams): void => {
 				await sessionStore.destroyLogoutSessionId(sid);
 			} else {
 				// User initiated logout
+				logger.info('Logger ut bruker');
 
 				await sessionStore.destroyOidcTokenSet(req.sessionID);
 

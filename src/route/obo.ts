@@ -14,6 +14,8 @@ interface SetupOboTestRouteParams {
 	oboTokenClient: Client;
 }
 
+// TODO: This route is only for debugging and will be removed
+
 export const setupOboTestRoute = (params: SetupOboTestRouteParams): void => {
 	const { app, appConfig, sessionStore, oboTokenClient } = params;
 
