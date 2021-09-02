@@ -35,7 +35,7 @@ async function startServer(appConfig: AppConfig) {
 		name: sessionCookie.name,
 		secret: sessionCookie.secret,
 		resave: false,
-		saveUninitialized: false,
+		saveUninitialized: true,
 		proxy: true,
 		cookie: {
 			maxAge: sessionCookie.maxAge,
