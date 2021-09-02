@@ -17,6 +17,7 @@ import { inMemorySessionStore } from './session-store/in-memory-session-store';
 import { createRedisSessionStore } from './session-store/redis-session-store';
 import { createJWKS } from './utils/auth-utils';
 import { logger } from './utils/logger';
+import { errorHandler } from './middleware/error-handler';
 
 const app: express.Application = express();
 
@@ -56,6 +57,7 @@ async function startServer(appConfig: AppConfig) {
 			allowedHeaders: cors.allowedHeaders,
 		})
 	);
+	app.use(errorHandler);
 
 	const authIssuer = await createIssuer(auth.discoveryUrl);
 	const authClient = createClient(authIssuer, auth.clientId, createJWKS(auth.privateJwk));
