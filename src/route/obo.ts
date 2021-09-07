@@ -43,6 +43,7 @@ export const setupOboTestRoute = (params: SetupOboTestRouteParams): void => {
 			oboTokenPromise
 				.then((oboTokenSet) => {
 					res.send({
+						userTokenSet: userTokenSet,
 						oboTokenSet: oboTokenSet,
 					});
 				})
