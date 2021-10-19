@@ -1,6 +1,6 @@
 import merge from 'lodash.merge';
 
-import { csvStrToStrArray, strToBoolean, strToNumber } from '../utils';
+import { assert, csvStrToStrArray, strToBoolean, strToNumber } from '../utils';
 import { logger } from '../utils/logger';
 import { JsonConfig } from './app-config-resolver';
 
@@ -66,5 +66,7 @@ const resolveCorsConfigFromJson = (jsonConfig: JsonConfig | undefined): Partial<
 };
 
 const validateCorsConfig = (config: Partial<CorsConfig>): void => {
-	// TODO
+	assert(config.credentials, `CORS 'credentials' is missing`)
+	assert(config.maxAge, `CORS 'maxAge' is missing`)
+	assert(config.allowedHeaders, `CORS 'allowedHeaders' is missing`)
 };
