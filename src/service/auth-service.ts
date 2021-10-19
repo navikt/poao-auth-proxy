@@ -6,7 +6,7 @@ import { createAzureAdAppIdFromClientId, JWKS, OboToken, OidcTokenSet, tokenSetT
 import { logger } from '../utils/logger';
 import { endsWithOneOf } from '../utils/url-utils';
 
-export const ALLOWED_REDIRECT_HOSTNAMES = ['nav.no'];
+export const ALLOWED_REDIRECT_HOSTNAMES = ['nav.no', 'localhost'];
 
 export async function createIssuer(discoveryUrl: string): Promise<Issuer<Client>> {
 	return Issuer.discover(discoveryUrl);

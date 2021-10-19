@@ -4,7 +4,7 @@
   "description": "Auth proxy ",
   "main": "src/server.ts",
   "scripts": {
-    "start": "ts-node src/server.ts",
+    "start": "dotenv -e .env -e .env.local ts-node src/server.ts",
     "build": "tsc",
     "prettier": "prettier --write 'src/**/*.ts'",
     "test": "jest"
@@ -56,6 +56,7 @@
     "@types/openid-client": "^3.7.0",
     "@types/redis": "^2.8.31",
     "@types/url-join": "^4.0.1",
+    "dotenv-cli": "^4.0.0",
     "husky": "^7.0.1",
     "import-sort-style-module": "^6.0.0",
     "jest": "^27.0.6",

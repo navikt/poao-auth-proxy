@@ -161,3 +161,16 @@ spec:
       rules:
         - application: <app-name>
 ```
+
+## Kjør opp lokalt
+
+Opprett en ny fil **.env.local** i rot-mappen.
+
+Legg til variabler kopiert fra en NAIS-applikasjon. F.eks for autentisering med Azure AD så trenger man:
+```
+AZURE_APP_CLIENT_ID=XXXXXXXXXXXX
+AZURE_APP_WELL_KNOWN_URL=https://login.microsoftonline.com/XXXXXXXXXXXX/v2.0/.well-known/openid-configuration
+AZURE_APP_JWK={...}
+```
+
+Start applikasjonen med `npm start`
