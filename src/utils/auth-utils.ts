@@ -23,6 +23,7 @@ export interface OidcTokenSet {
 	expiresAt: number; // Epoch ms timestamp for expiration
 	accessToken: string;
 	idToken: string;
+	refreshToken?: string;
 }
 
 export interface OboToken {
@@ -102,6 +103,10 @@ const getTokenBodyObject = (jwtTokenStr: string): { [key: string]: any } => {
 	return JSON.parse(bodyPartJson);
 }
 
+export const createScope = (scopes: (string | undefined | null)[]): string => {
+	return scopes.filter(s => !!s).join(' ');
+};
+
 export const tokenSetToOboToken = (tokenSet: TokenSet): OboToken => {
 	return {
 		tokenType: assert(tokenSet.token_type, 'Missing token_type'),
@@ -118,5 +123,6 @@ export const tokenSetToOidcTokenSet = (tokenSet: TokenSet): OidcTokenSet => {
 		expiresAt: assert(tokenSet.expires_at, 'Missing expires_at'),
 		accessToken: assert(tokenSet.access_token, 'Missing access_token'),
 		idToken: assert(tokenSet.id_token, 'Missing id_token'),
+		refreshToken: tokenSet.refresh_token
 	};
 };

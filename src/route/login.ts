@@ -60,6 +60,7 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 					codeChallenge,
 					state,
 					nonce,
+					enableRefresh: appConfig.auth.enableRefresh
 				};
 
 				const authorizationUrl =

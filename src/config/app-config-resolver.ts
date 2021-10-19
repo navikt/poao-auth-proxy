@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 
 import { logger } from '../utils/logger';
-import { AuthConfig, logAuthConfig, resolveOidcConfig } from './auth-config';
+import { AuthConfig, logAuthConfig, resolveAuthConfig } from './auth-config';
 import { resolveBaseConfig } from './base-config';
 import { CorsConfig, logCorsConfig, resolveCorsConfig } from './cors-config';
 import { ProxyConfig, logProxyConfig, resolveProxyConfig } from './proxy-config';
@@ -34,7 +34,7 @@ export function createAppConfig(): AppConfig {
 		port: baseConfig.port,
 		applicationUrl: baseConfig.applicationUrl,
 		applicationName: baseConfig.applicationName,
-		auth: resolveOidcConfig(jsonConfig),
+		auth: resolveAuthConfig(jsonConfig),
 		cors: resolveCorsConfig(jsonConfig),
 		sessionCookie: resolveSessionCookieConfig(baseConfig.applicationName, jsonConfig),
 		sessionStorage: resolveSessionStorageConfig(jsonConfig),

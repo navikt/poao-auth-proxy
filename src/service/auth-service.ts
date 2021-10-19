@@ -1,8 +1,15 @@
-import { Client, Issuer } from 'openid-client';
+import { Client, Issuer, TokenSet } from 'openid-client';
 import urlJoin from 'url-join';
 
 import { TokenXConfig } from '../config/auth-config';
-import { createAzureAdAppIdFromClientId, JWKS, OboToken, OidcTokenSet, tokenSetToOboToken } from '../utils/auth-utils';
+import {
+	createAzureAdAppIdFromClientId,
+	createScope,
+	JWKS,
+	OboToken,
+	OidcTokenSet,
+	tokenSetToOboToken
+} from '../utils/auth-utils';
 import { logger } from '../utils/logger';
 import { endsWithOneOf } from '../utils/url-utils';
 
@@ -31,15 +38,23 @@ export function createAzureAdAuthorizationUrl(params: {
 	state: string;
 	nonce: string;
 	codeChallenge: string;
+	enableRefresh: boolean;
 }): string {
 	const authProxyAppIdentifier = createAzureAdAppIdFromClientId(params.clientId);
+
+	const scope = createScope([
+		'openid',
+		'profile',
+		params.enableRefresh ? 'offline_access' : undefined,
+		authProxyAppIdentifier
+	]);
 
 	return params.client.authorizationUrl({
 		response_mode: 'form_post',
 		response_type: 'code',
 		code_challenge: params.codeChallenge,
 		code_challenge_method: 'S256',
-		scope: `openid profile ${authProxyAppIdentifier}`,
+		scope: scope,
 		redirect_uri: params.redirect_uri,
 		state: params.state,
 		nonce: params.nonce,
@@ -52,13 +67,21 @@ export function createIdPortenAuthorizationUrl(params: {
 	state: string;
 	nonce: string;
 	codeChallenge: string;
+	enableRefresh: boolean;
 }): string {
+
+	const scope = createScope([
+		'openid',
+		'profile',
+		params.enableRefresh ? 'offline_access' : undefined
+	]);
+
 	return params.client.authorizationUrl({
 		response_mode: 'form_post',
 		response_type: 'code',
 		code_challenge: params.codeChallenge,
 		code_challenge_method: 'S256',
-		scope: 'openid profile',
+		scope: scope,
 		redirect_uri: params.redirect_uri,
 		state: params.state,
 		nonce: params.nonce,
@@ -121,6 +144,15 @@ export async function createTokenXOnBehalfOfToken(
 	);
 
 	return tokenSetToOboToken(oboTokenSet);
+}
+
+export function getNewAccessTokenWithRefreshToken(client: Client, refreshToken: string): Promise<TokenSet> {
+	return client.refresh(refreshToken, {
+		clientAssertionPayload: {
+			aud: client.issuer.metadata.token_endpoint,
+			nbf: Math.floor(Date.now() / 1000),
+		}
+	});
 }
 
 export const isTokenValid = (tokenSet: OidcTokenSet | undefined): boolean => {
