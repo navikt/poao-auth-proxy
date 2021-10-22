@@ -1,22 +1,10 @@
-import { TokenSet, generators } from 'openid-client';
-
+import { TokenSet } from 'openid-client';
 import { assert, fromBase64 } from './index';
-import { ProxyApp } from '../config/proxy-config';
-
-export const CALLBACK_PATH = '/oauth2/callback';
 
 // The tokens should be considered expired a bit before the actual expiration.
 // This is to prevent problems with clock skew and that the token might expire in-flight.
 export const EXPIRE_BEFORE_SECONDS = 15;
 export const EXPIRE_BEFORE_MS = EXPIRE_BEFORE_SECONDS * 1000;
-
-export interface JWKS {
-	keys: [
-		{
-			kty: 'oct';
-		}
-	];
-}
 
 export interface OidcTokenSet {
 	tokenType: string; // Always "Bearer"
@@ -34,51 +22,16 @@ export interface OboToken {
 	accessToken: string; // The OBO token
 }
 
-export const generateState = (): string => {
-	return generators.state();
-};
-
-export const generateNonce = (): string => {
-	return generators.nonce();
-};
-
-export const generateCodeVerifier = (): string => {
-	return generators.codeVerifier();
-};
-
-export const generateCodeChallenge = (codeVerifier: string): string => {
-	return generators.codeChallenge(codeVerifier);
-};
-
-/**
- * Creates an app identifier that is used when requesting tokens for a given application
- * @param appClientId can either be of type 'e89006c5-7193-4ca3-8e26-d0990d9d981f' or 'dev-gcp.aura.nais-testapp'
- */
-export const createAzureAdAppIdFromClientId = (appClientId: string): string => {
-	return `api://${appClientId}/.default`;
-};
-
-export const createAzureAdAppId = (proxyApp: ProxyApp): string => {
-	return `api://${proxyApp.cluster}.${proxyApp.namespace}.${proxyApp.name}/.default`;
-};
-
-export const createTokenXAppId = (proxyApp: ProxyApp): string => {
-	return `${proxyApp.cluster}:${proxyApp.namespace}:${proxyApp.name}`;
-};
-
-export const createJWKS = (jwkJson: string): JWKS => {
-	const jwk = JSON.parse(jwkJson);
-
-	// UnhandledPromiseRejectionWarning: JWKInvalid: `x5c` member at index 0 is not a valid base64-encoded DER PKIX certificate
-	delete jwk.x5c;
-
-	return {
-		keys: [jwk],
-	};
-};
-
-export const getAdjustedExpireInSeconds = (expiresInSeconds: number): number => {
+export const getExpiresInSecondWithClockSkew = (expiresInSeconds: number): number => {
 	return expiresInSeconds - EXPIRE_BEFORE_SECONDS;
+};
+
+export const isTokenExpiredOrExpiresSoon = (tokenSet: OidcTokenSet | undefined, howSoonMs: number): boolean => {
+	if (!tokenSet) {
+		return true;
+	}
+
+	return tokenSet.expiresAt < new Date().getMilliseconds() - howSoonMs;
 };
 
 export const getTokenSid = (jwtTokenStr: string): string | undefined => {
@@ -99,9 +52,6 @@ const getTokenBodyObject = (jwtTokenStr: string): { [key: string]: any } => {
 	return JSON.parse(bodyPartJson);
 }
 
-export const createScope = (scopes: (string | undefined | null)[]): string => {
-	return scopes.filter(s => !!s).join(' ');
-};
 
 export const createNbf = (): number => {
 	return Math.floor(Date.now() / 1000);

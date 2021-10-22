@@ -4,22 +4,22 @@ import { Client } from 'openid-client';
 import urlJoin from 'url-join';
 
 import { AppConfig } from '../config/app-config-resolver';
-import {
-	createAzureAdOnBehalfOfToken,
-	createTokenXOnBehalfOfToken,
-	fetchRefreshedTokenSet,
-	isTokenExpiredOrExpiresSoon
-} from '../service/auth-service';
 import { SessionStore } from '../session-store/session-store';
-import {
-	createAzureAdAppId,
-	createTokenXAppId,
-	EXPIRE_BEFORE_MS,
-	tokenSetToOidcTokenSet
-} from '../utils/auth-utils';
 import { asyncMiddleware } from '../utils/express-utils';
 import { logger } from '../utils/logger';
 import { getSecondsUntil } from '../utils/date-utils';
+import { createAzureAdAppId, createTokenXAppId } from '../utils/auth-config-utils';
+import {
+	EXPIRE_BEFORE_MS,
+	getExpiresInSecondWithClockSkew,
+	isTokenExpiredOrExpiresSoon,
+	tokenSetToOidcTokenSet
+} from '../utils/auth-token-utils';
+import {
+	createAzureAdOnBehalfOfToken,
+	createTokenXOnBehalfOfToken,
+	fetchRefreshedTokenSet
+} from '../utils/auth-client-utils';
 
 const PROXY_BASE_PATH = '/proxy';
 
@@ -90,7 +90,10 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 
 					oboToken = await oboTokenPromise;
 
-					await sessionStore.setUserOboToken(req.sessionID, appId, oboToken);
+					const expiresInSeconds = getSecondsUntil(oboToken.expiresAt);
+					const expiresInSecondWithClockSkew = getExpiresInSecondWithClockSkew(expiresInSeconds);
+
+					await sessionStore.setUserOboToken(req.sessionID, appId, expiresInSecondWithClockSkew, oboToken);
 				}
 
 				req.headers['Authorization'] = `Bearer ${oboToken.accessToken}`;

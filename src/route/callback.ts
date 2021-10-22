@@ -2,13 +2,13 @@ import express from 'express';
 import { Client } from 'openid-client';
 
 import { AppConfig } from '../config/app-config-resolver';
-import { createLoginRedirectUrl, safeRedirectUri } from '../service/auth-service';
 import { SessionStore } from '../session-store/session-store';
-import { CALLBACK_PATH, getTokenSid, tokenSetToOidcTokenSet } from '../utils/auth-utils';
 import { asyncRoute } from '../utils/express-utils';
 import { logger } from '../utils/logger';
 import { LoginProvider } from '../config/auth-config';
 import { getNowPlusSeconds, getSecondsUntil } from '../utils/date-utils';
+import { CALLBACK_PATH, createLoginRedirectUrl, safeRedirectUri } from '../utils/auth-login-utils';
+import { getTokenSid, tokenSetToOidcTokenSet } from '../utils/auth-token-utils';
 
 interface SetupCallbackRouteParams {
 	app: express.Application;

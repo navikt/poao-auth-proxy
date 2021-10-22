@@ -12,12 +12,12 @@ import { setupLoginRoute } from './route/login';
 import { setupLogoutRoutes } from './route/logout';
 import { setupOboTestRoute } from './route/obo';
 import { setupProxyRoutes } from './route/proxy';
-import { createClient, createIssuer } from './service/auth-service';
 import { inMemorySessionStore } from './session-store/in-memory-session-store';
 import { createRedisSessionStore } from './session-store/redis-session-store';
-import { createJWKS } from './utils/auth-utils';
+import { createJWKS } from './utils/auth-config-utils';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/error-handler';
+import { createClient, createIssuer } from './utils/auth-client-utils';
 
 const app: express.Application = express();
 

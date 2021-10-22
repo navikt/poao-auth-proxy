@@ -1,7 +1,4 @@
-import { OboToken, OidcTokenSet } from '../utils/auth-utils';
-
-// The login state can be removed after some time, f.ex if the user stops the login halfway
-export const LOGIN_STATE_TIMEOUT_AFTER_SECONDS = 3600; // 1 hour
+import { OboToken, OidcTokenSet } from '../utils/auth-token-utils';
 
 export interface LoginState {
 	nonce: string;
@@ -12,7 +9,7 @@ export interface LoginState {
 
 export interface SessionStore {
 	getLoginState: (id: string) => Promise<LoginState | undefined>;
-	setLoginState: (id: string, loginState: LoginState) => Promise<void>;
+	setLoginState: (id: string, expiresInSeconds: number, loginState: LoginState) => Promise<void>;
 
 	getRefreshAllowedWithin: (sessionId: string) => Promise<Date | undefined>;
 	setRefreshAllowedWithin: (sessionId: string, expiresInSeconds: number, refreshAllowedWithin: Date) => Promise<void>;
@@ -29,5 +26,5 @@ export interface SessionStore {
 	destroyOidcTokenSet: (sessionId: string) => Promise<void>;
 
 	getUserOboToken: (sessionId: string, appIdentifier: string) => Promise<OboToken | undefined>;
-	setUserOboToken: (sessionId: string, appIdentifier: string, oboToken: OboToken) => Promise<void>;
+	setUserOboToken: (sessionId: string, appIdentifier: string, expiresInSeconds: number, oboToken: OboToken) => Promise<void>;
 }

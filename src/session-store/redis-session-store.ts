@@ -3,10 +3,9 @@ import { promisify } from 'util';
 import redis from 'redis';
 
 import { SessionStorageConfig } from '../config/session-storage-config';
-import { OboToken, OidcTokenSet, getAdjustedExpireInSeconds } from '../utils/auth-utils';
 import { logger } from '../utils/logger';
-import { LOGIN_STATE_TIMEOUT_AFTER_SECONDS, LoginState, SessionStore } from './session-store';
-import { getSecondsUntil } from '../utils/date-utils';
+import { LoginState, SessionStore } from './session-store';
+import { OboToken, OidcTokenSet } from '../utils/auth-token-utils';
 
 const createLoginStateKey = (id: string): string => `loginState.${id}`;
 
@@ -16,8 +15,7 @@ const createRefreshAllowedWithinEpochKey = (sessionId: string): string => `refre
 
 const createAuthProviderSessionKey = (authProviderSid: string): string => `authProviderSid.${authProviderSid}`;
 
-const createOboTokenKey = (sessionId: string, appIdentifier: string): string =>
-	`oboToken.${sessionId}.${appIdentifier}`;
+const createOboTokenKey = (sessionId: string, appIdentifier: string): string => `oboToken.${sessionId}.${appIdentifier}`;
 
 export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConfig): SessionStore => {
 	const client = redis.createClient({
@@ -53,8 +51,8 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 					return undefined;
 				});
 		},
-		setLoginState(id: string, loginState: LoginState): Promise<void> {
-			return setexAsync(createLoginStateKey(id), LOGIN_STATE_TIMEOUT_AFTER_SECONDS, JSON.stringify(loginState))
+		setLoginState(id: string, expiresInSeconds: number, loginState: LoginState): Promise<void> {
+			return setexAsync(createLoginStateKey(id), expiresInSeconds, JSON.stringify(loginState))
 				.then(() => {})
 				.catch((err) => {
 					logger.error(err);
@@ -140,11 +138,8 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 					return undefined;
 				});
 		},
-		setUserOboToken(sessionId: string, appIdentifier: string, oboToken: OboToken): Promise<void> {
-			const expiresInSeconds = getSecondsUntil(oboToken.expiresAt);
-			const adjustedExpiresInSeconds = getAdjustedExpireInSeconds(expiresInSeconds);
-
-			return setexAsync(createOboTokenKey(sessionId, appIdentifier), adjustedExpiresInSeconds, JSON.stringify(oboToken))
+		setUserOboToken(sessionId: string, appIdentifier: string, expiresInSeconds: number, oboToken: OboToken): Promise<void> {
+			return setexAsync(createOboTokenKey(sessionId, appIdentifier), expiresInSeconds, JSON.stringify(oboToken))
 				.then(() => {})
 				.catch((err) => {
 					logger.error(err);

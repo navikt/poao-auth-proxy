@@ -1,21 +1,10 @@
 import { Client, Issuer, TokenSet } from 'openid-client';
-import urlJoin from 'url-join';
-
-import { TokenXConfig } from '../config/auth-config';
 import {
-	createAzureAdAppIdFromClientId, createNbf,
-	createScope,
+	createAzureAdAppIdFromClientId,
 	JWKS,
-	OboToken,
-	OidcTokenSet,
-	tokenSetToOboToken
-} from '../utils/auth-utils';
-import { logger } from '../utils/logger';
-import { endsWithOneOf } from '../utils/url-utils';
-
-// TODO: Split up into multiple utils files. F.ex auth-client-utils, auth-token-utils ...
-
-export const ALLOWED_REDIRECT_HOSTNAMES = ['nav.no', 'localhost'];
+} from './auth-config-utils';
+import { TokenXConfig } from '../config/auth-config';
+import { createNbf, OboToken, tokenSetToOboToken } from './auth-token-utils';
 
 export async function createIssuer(discoveryUrl: string): Promise<Issuer<Client>> {
 	return Issuer.discover(discoveryUrl);
@@ -157,37 +146,6 @@ export function fetchRefreshedTokenSet(client: Client, refreshToken: string): Pr
 	});
 }
 
-export const isTokenValid = (tokenSet: OidcTokenSet | undefined): boolean => {
-	if (!tokenSet) {
-		return false;
-	}
-
-	// TODO: Use isTokenExpiredOrSoonToBe
-
-	return tokenSet.expiresAt > new Date().getMilliseconds();
-};
-
-export const isTokenExpiredOrExpiresSoon = (tokenSet: OidcTokenSet | undefined, howSoonMs: number): boolean => {
-	if (!tokenSet) {
-		return true;
-	}
-
-	return tokenSet.expiresAt < new Date().getMilliseconds() - howSoonMs;
-};
-
-export const createLoginRedirectUrl = (applicationUrl: string, callbackPath: string): string => {
-	return urlJoin(applicationUrl, callbackPath);
-};
-
-export const safeRedirectUri = (applicationUrl: string, redirectUri: string | undefined) => {
-	if (!redirectUri) {
-		return applicationUrl;
-	}
-
-	if (!endsWithOneOf(redirectUri, ALLOWED_REDIRECT_HOSTNAMES)) {
-		logger.warn(`${redirectUri} is not valid, defaulting to application url: ${applicationUrl}`);
-		return applicationUrl;
-	}
-
-	return redirectUri;
+export const createScope = (scopes: (string | undefined | null)[]): string => {
+	return scopes.filter(s => !!s).join(' ');
 };

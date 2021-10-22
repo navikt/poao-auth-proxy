@@ -1,4 +1,4 @@
-import { createScope } from './auth-utils';
+import { createScope } from './auth-client-utils';
 
 describe('createScope', () => {
 	it('should create scope and filter values', () => {

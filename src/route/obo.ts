@@ -2,10 +2,10 @@ import express from 'express';
 import { Client } from 'openid-client';
 
 import { AppConfig } from '../config/app-config-resolver';
-import { createAzureAdOnBehalfOfToken, createTokenXOnBehalfOfToken } from '../service/auth-service';
 import { SessionStore } from '../session-store/session-store';
 import { asyncRoute } from '../utils/express-utils';
 import { logger } from '../utils/logger';
+import { createAzureAdOnBehalfOfToken, createTokenXOnBehalfOfToken } from '../utils/auth-client-utils';
 
 interface SetupOboTestRouteParams {
 	app: express.Application;

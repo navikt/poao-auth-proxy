@@ -1,6 +1,6 @@
-import { OboToken, OidcTokenSet, getAdjustedExpireInSeconds } from '../utils/auth-utils';
-import { LOGIN_STATE_TIMEOUT_AFTER_SECONDS, LoginState, SessionStore } from './session-store';
+import { LoginState, SessionStore } from './session-store';
 import { getSecondsUntil } from '../utils/date-utils';
+import { getExpiresInSecondWithClockSkew, OboToken, OidcTokenSet } from '../utils/auth-token-utils';
 
 // NB: This SessionStore implementation is unsafe to use in production
 
@@ -22,12 +22,12 @@ export const inMemorySessionStore: SessionStore = {
 	getLoginState(id: string): Promise<LoginState | undefined> {
 		return Promise.resolve(store.loginState[id]);
 	},
-	setLoginState(id: string, loginState: LoginState): Promise<void> {
+	setLoginState(id: string, expiresInSeconds: number, loginState: LoginState): Promise<void> {
 		store.loginState[id] = loginState;
 
 		setTimeout(() => {
 			delete store.loginState[id];
-		}, LOGIN_STATE_TIMEOUT_AFTER_SECONDS * 1000);
+		}, expiresInSeconds * 1000);
 
 		return Promise.resolve();
 	},
@@ -90,19 +90,16 @@ export const inMemorySessionStore: SessionStore = {
 
 		return Promise.resolve(store.oboTokens[sessionId][appIdentifier]);
 	},
-	setUserOboToken(sessionId: string, appIdentifier: string, oboToken: OboToken): Promise<void> {
+	setUserOboToken(sessionId: string, appIdentifier: string, expiresInSeconds: number, oboToken: OboToken): Promise<void> {
 		if (!store.oboTokens[sessionId]) {
 			store.oboTokens[sessionId] = {};
 		}
-
-		const expiresInSeconds = getSecondsUntil(oboToken.expiresAt);
-		const adjustedExpiresInSeconds = getAdjustedExpireInSeconds(expiresInSeconds);
 
 		store.oboTokens[sessionId][appIdentifier] = oboToken;
 
 		setTimeout(() => {
 			delete store.oboTokens[sessionId][appIdentifier];
-		}, adjustedExpiresInSeconds * 1000);
+		}, expiresInSeconds * 1000);
 
 		return Promise.resolve();
 	},

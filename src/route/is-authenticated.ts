@@ -1,12 +1,12 @@
 import express, { Response } from 'express';
 import { Client } from 'openid-client';
 
-import { fetchRefreshedTokenSet, isTokenExpiredOrExpiresSoon } from '../service/auth-service';
 import { SessionStore } from '../session-store/session-store';
 import { asyncRoute } from '../utils/express-utils';
-import { EXPIRE_BEFORE_MS, tokenSetToOidcTokenSet } from '../utils/auth-utils';
 import { AppConfig } from '../config/app-config-resolver';
 import { getSecondsUntil } from '../utils/date-utils';
+import { EXPIRE_BEFORE_MS, isTokenExpiredOrExpiresSoon, tokenSetToOidcTokenSet } from '../utils/auth-token-utils';
+import { fetchRefreshedTokenSet } from '../utils/auth-client-utils';
 
 interface SetupCallbackRouteParams {
 	app: express.Application;
