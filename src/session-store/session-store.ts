@@ -14,6 +14,10 @@ export interface SessionStore {
 	getLoginState: (id: string) => Promise<LoginState | undefined>;
 	setLoginState: (id: string, loginState: LoginState) => Promise<void>;
 
+	getRefreshAllowedWithin: (sessionId: string) => Promise<Date | undefined>;
+	setRefreshAllowedWithin: (sessionId: string, expiresInSeconds: number, refreshAllowedWithin: Date) => Promise<void>;
+	destroyRefreshAllowedWithin: (sessionId: string) => Promise<void>;
+
 	// Uses external session id from the ID-provider as key to find corresponding session ID from the auth-proxy.
 	// Used to find the users session ID for frontchannel logout.
 	getLogoutSessionId: (oidcSessionId: string) => Promise<string | undefined>;
@@ -21,7 +25,7 @@ export interface SessionStore {
 	destroyLogoutSessionId: (oidcSessionId: string) => Promise<void>;
 
 	getOidcTokenSet: (sessionId: string) => Promise<OidcTokenSet | undefined>;
-	setOidcTokenSet: (sessionId: string, tokenSet: OidcTokenSet) => Promise<void>;
+	setOidcTokenSet: (sessionId: string, expiresInSeconds: number, tokenSet: OidcTokenSet) => Promise<void>;
 	destroyOidcTokenSet: (sessionId: string) => Promise<void>;
 
 	getUserOboToken: (sessionId: string, appIdentifier: string) => Promise<OboToken | undefined>;

@@ -12,6 +12,11 @@ interface SetupLogoutRoutesParams {
 export const setupLogoutRoutes = (params: SetupLogoutRoutesParams): void => {
 	const { app, sessionStore } = params;
 
+	async function destroySessionState(sessionId: string): Promise<void> {
+		await sessionStore.destroyOidcTokenSet(sessionId);
+		await sessionStore.destroyRefreshAllowedWithin(sessionId);
+	}
+
 	app.use(
 		'/oauth2/logout',
 		asyncRoute(async (req, res) => {
@@ -24,7 +29,7 @@ export const setupLogoutRoutes = (params: SetupLogoutRoutesParams): void => {
 				const sessionId = await sessionStore.getLogoutSessionId(sid);
 
 				if (sessionId) {
-					await sessionStore.destroyOidcTokenSet(sessionId);
+					await destroySessionState(sessionId);
 				}
 
 				await sessionStore.destroyLogoutSessionId(sid);
@@ -32,7 +37,7 @@ export const setupLogoutRoutes = (params: SetupLogoutRoutesParams): void => {
 				// User initiated logout
 				logger.info('Logger ut bruker');
 
-				await sessionStore.destroyOidcTokenSet(req.sessionID);
+				await destroySessionState(req.sessionID);
 
 				req.session.destroy((error) => {
 					if (error) {

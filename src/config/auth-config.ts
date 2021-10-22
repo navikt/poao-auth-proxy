@@ -1,10 +1,12 @@
 import merge from 'lodash.merge';
 
-import { assert, strToBoolean, strToEnum } from '../utils';
+import { assert, strToBoolean, strToEnum, strToNumber } from '../utils';
 import { logger } from '../utils/logger';
 import { JsonConfig } from './app-config-resolver';
 
 const DEFAULT_AUTH_ENABLE_REFRESH = false;
+
+const DEFAULT_AUTH_REFRESH_ALLOWED_WITHIN_SECONDS = 43_200; // 12 hours
 
 export enum LoginProvider {
 	ID_PORTEN = 'ID_PORTEN',
@@ -16,7 +18,8 @@ export interface AuthConfig {
 	discoveryUrl: string;
 	clientId: string;
 	privateJwk: string;
-	enableRefresh: boolean;
+	enableRefresh: boolean;                 // If true then poao-auth-proxy will try to refresh expired access_tokens
+	refreshAllowedWithinSeconds: number;    // Specifies how long after initial login the user is allowed to refresh their tokens
 	tokenX?: TokenXConfig;
 }
 
@@ -33,8 +36,8 @@ export interface TokenXConfig {
 }
 
 export const logAuthConfig = (config: AuthConfig): void => {
-	const { loginProvider, discoveryUrl, clientId } = config;
-	logger.info(`Auth config: authProvider=${loginProvider} discoveryUrl=${discoveryUrl} clientId=${clientId}`);
+	const { loginProvider, discoveryUrl, clientId, enableRefresh } = config;
+	logger.info(`Auth config: authProvider=${loginProvider} discoveryUrl=${discoveryUrl} clientId=${clientId} enableRefresh=${enableRefresh}`);
 };
 
 export const resolveAuthConfig = (jsonConfig: JsonConfig | undefined): AuthConfig => {
@@ -45,6 +48,10 @@ export const resolveAuthConfig = (jsonConfig: JsonConfig | undefined): AuthConfi
 
 	if (authConfig.enableRefresh == null) {
 		authConfig.enableRefresh = DEFAULT_AUTH_ENABLE_REFRESH;
+	}
+
+	if (authConfig.refreshAllowedWithinSeconds == null) {
+		authConfig.refreshAllowedWithinSeconds = DEFAULT_AUTH_REFRESH_ALLOWED_WITHIN_SECONDS;
 	}
 
 	if (authConfig.loginProvider === LoginProvider.AZURE_AD) {
@@ -64,6 +71,7 @@ export const resolveAuthConfig = (jsonConfig: JsonConfig | undefined): AuthConfi
 const resolveAuthConfigFromEnvironment = (): Partial<AuthConfig> => {
 	return {
 		loginProvider: strToEnum(process.env.AUTH_LOGIN_PROVIDER, LoginProvider),
+		refreshAllowedWithinSeconds: strToNumber(process.env.AUTH_REFRESH_ALLOWED_WITHIN_SECONDS),
 		enableRefresh: strToBoolean(process.env.AUTH_ENABLE_REFRESH)
 	};
 };
@@ -73,6 +81,7 @@ const resolveAuthConfigFromJson = (jsonConfig: JsonConfig | undefined): Partial<
 
 	return {
 		loginProvider: strToEnum(jsonConfig.loginProvider, LoginProvider),
+		refreshAllowedWithinSeconds: jsonConfig.refreshAllowedWithinSeconds,
 		enableRefresh: strToBoolean(jsonConfig.enableRefresh)
 	};
 };
@@ -109,6 +118,7 @@ const validateAuthConfig = (config: Partial<AuthConfig>): AuthConfig => {
 	assert(config.privateJwk, `Auth 'privateJwk' is missing`);
 
 	assert(config.enableRefresh, `Auth 'enableRefresh' is missing`);
+	assert(config.refreshAllowedWithinSeconds, `Auth 'refreshAllowedWithinSeconds' is missing`);
 
 	if (config.loginProvider === LoginProvider.ID_PORTEN) {
 		assert(config.tokenX, `Auth 'tokenX' is missing`);

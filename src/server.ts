@@ -80,10 +80,10 @@ async function startServer(appConfig: AppConfig) {
 	setupCallbackRoute({ app, appConfig, sessionStore, authClient });
 	setupLogoutRoutes({ app, sessionStore });
 
-	setupIsAuthenticatedRoute({ app, sessionStore });
+	setupIsAuthenticatedRoute({ app, appConfig, authClient, sessionStore });
 	setupOboTestRoute({ app, appConfig, sessionStore, oboTokenClient });
 
-	setupProxyRoutes({ app, appConfig, sessionStore, oboTokenClient });
+	setupProxyRoutes({ app, appConfig, sessionStore, authClient, oboTokenClient });
 
 	app.listen(appConfig.port, () => logger.info('Server started successfully'));
 }

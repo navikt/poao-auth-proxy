@@ -3,13 +3,16 @@ import { promisify } from 'util';
 import redis from 'redis';
 
 import { SessionStorageConfig } from '../config/session-storage-config';
-import { OboToken, OidcTokenSet, getAdjustedExpireInSeconds, getExpiresInSeconds } from '../utils/auth-utils';
+import { OboToken, OidcTokenSet, getAdjustedExpireInSeconds } from '../utils/auth-utils';
 import { logger } from '../utils/logger';
 import { LOGIN_STATE_TIMEOUT_AFTER_SECONDS, LoginState, SessionStore } from './session-store';
+import { getSecondsUntil } from '../utils/date-utils';
 
 const createLoginStateKey = (id: string): string => `loginState.${id}`;
 
 const createOidcTokenSetKey = (sessionId: string): string => `oidcTokenSet.${sessionId}`;
+
+const createRefreshAllowedWithinEpochKey = (sessionId: string): string => `refreshAllowedWithinEpoch.${sessionId}`;
 
 const createAuthProviderSessionKey = (authProviderSid: string): string => `authProviderSid.${authProviderSid}`;
 
@@ -58,6 +61,29 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 				});
 		},
 
+		getRefreshAllowedWithin(sessionId: string): Promise<Date | undefined> {
+			return getAsync(createRefreshAllowedWithinEpochKey(sessionId))
+				.then((data) => {
+					return new Date(Number(data)) || undefined;
+				})
+				.catch((err) => {
+					logger.error(err);
+					return undefined;
+				});
+		},
+		setRefreshAllowedWithin(sessionId: string, expiresInSeconds: number, refreshAllowedWithin: Date): Promise<void> {
+			return setexAsync(createRefreshAllowedWithinEpochKey(sessionId), expiresInSeconds, refreshAllowedWithin.getMilliseconds().toString())
+				.then(() => {})
+				.catch((err) => {
+					logger.error(err);
+				});
+		},
+		destroyRefreshAllowedWithin(sessionId: string): Promise<void> {
+			return delAsync(createRefreshAllowedWithinEpochKey(sessionId)).catch((err) => {
+				logger.error(err);
+			});
+		},
+
 		getLogoutSessionId(oidcSessionId: string): Promise<string | undefined> {
 			return getAsync(createAuthProviderSessionKey(oidcSessionId))
 				.then((data) => {
@@ -91,9 +117,7 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 					return undefined;
 				});
 		},
-		setOidcTokenSet(sessionId: string, tokenSet: OidcTokenSet): Promise<void> {
-			const expiresInSeconds = getExpiresInSeconds(tokenSet.expiresAt);
-
+		setOidcTokenSet(sessionId: string, expiresInSeconds: number, tokenSet: OidcTokenSet): Promise<void> {
 			return setexAsync(createOidcTokenSetKey(sessionId), expiresInSeconds, JSON.stringify(tokenSet))
 				.then(() => {})
 				.catch((err) => {
@@ -117,7 +141,7 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 				});
 		},
 		setUserOboToken(sessionId: string, appIdentifier: string, oboToken: OboToken): Promise<void> {
-			const expiresInSeconds = getExpiresInSeconds(oboToken.expiresAt);
+			const expiresInSeconds = getSecondsUntil(oboToken.expiresAt);
 			const adjustedExpiresInSeconds = getAdjustedExpireInSeconds(expiresInSeconds);
 
 			return setexAsync(createOboTokenKey(sessionId, appIdentifier), adjustedExpiresInSeconds, JSON.stringify(oboToken))

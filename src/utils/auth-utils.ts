@@ -5,9 +5,10 @@ import { ProxyApp } from '../config/proxy-config';
 
 export const CALLBACK_PATH = '/oauth2/callback';
 
-// The OBO token should be considered expired a bit before the actual expiration.
+// The tokens should be considered expired a bit before the actual expiration.
 // This is to prevent problems with clock skew and that the token might expire in-flight.
-const OBO_TOKEN_EXPIRE_BEFORE_SECONDS = 15;
+export const EXPIRE_BEFORE_SECONDS = 15;
+export const EXPIRE_BEFORE_MS = EXPIRE_BEFORE_SECONDS * 1000;
 
 export interface JWKS {
 	keys: [
@@ -76,13 +77,8 @@ export const createJWKS = (jwkJson: string): JWKS => {
 	};
 };
 
-export const getExpiresInSeconds = (expiresAtEpochMs: number): number => {
-	const expiresInMs = expiresAtEpochMs - new Date().getMilliseconds();
-	return Math.ceil(expiresInMs / 1000);
-};
-
 export const getAdjustedExpireInSeconds = (expiresInSeconds: number): number => {
-	return expiresInSeconds - OBO_TOKEN_EXPIRE_BEFORE_SECONDS;
+	return expiresInSeconds - EXPIRE_BEFORE_SECONDS;
 };
 
 export const getTokenSid = (jwtTokenStr: string): string | undefined => {
@@ -105,6 +101,10 @@ const getTokenBodyObject = (jwtTokenStr: string): { [key: string]: any } => {
 
 export const createScope = (scopes: (string | undefined | null)[]): string => {
 	return scopes.filter(s => !!s).join(' ');
+};
+
+export const createNbf = (): number => {
+	return Math.floor(Date.now() / 1000);
 };
 
 export const tokenSetToOboToken = (tokenSet: TokenSet): OboToken => {

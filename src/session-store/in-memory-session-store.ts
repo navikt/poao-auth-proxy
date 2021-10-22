@@ -1,5 +1,6 @@
-import { OboToken, OidcTokenSet, getAdjustedExpireInSeconds, getExpiresInSeconds } from '../utils/auth-utils';
+import { OboToken, OidcTokenSet, getAdjustedExpireInSeconds } from '../utils/auth-utils';
 import { LOGIN_STATE_TIMEOUT_AFTER_SECONDS, LoginState, SessionStore } from './session-store';
+import { getSecondsUntil } from '../utils/date-utils';
 
 // NB: This SessionStore implementation is unsafe to use in production
 
@@ -8,11 +9,13 @@ const store: {
 	idProviderSession: { [key: string]: string | undefined };
 	userTokens: { [key: string]: any };
 	oboTokens: { [key: string]: any };
+	refreshAllowedWithin: { [key: string]: Date | undefined }
 } = {
 	loginState: {},
 	idProviderSession: {},
 	userTokens: {},
 	oboTokens: {},
+	refreshAllowedWithin: {}
 };
 
 export const inMemorySessionStore: SessionStore = {
@@ -26,6 +29,23 @@ export const inMemorySessionStore: SessionStore = {
 			delete store.loginState[id];
 		}, LOGIN_STATE_TIMEOUT_AFTER_SECONDS * 1000);
 
+		return Promise.resolve();
+	},
+
+	getRefreshAllowedWithin(sessionId: string): Promise<Date | undefined> {
+		return Promise.resolve(store.refreshAllowedWithin[sessionId]);
+	},
+	setRefreshAllowedWithin(sessionId: string, expiresInSeconds: number, refreshAllowedWithin: Date): Promise<void> {
+		store.refreshAllowedWithin[sessionId] = refreshAllowedWithin;
+
+		setTimeout(() => {
+			delete store.refreshAllowedWithin[sessionId];
+		}, expiresInSeconds * 1000);
+
+		return Promise.resolve();
+	},
+	destroyRefreshAllowedWithin(sessionId: string): Promise<void> {
+		delete store.refreshAllowedWithin[sessionId];
 		return Promise.resolve();
 	},
 
@@ -49,10 +69,8 @@ export const inMemorySessionStore: SessionStore = {
 	getOidcTokenSet(sessionId: string): Promise<OidcTokenSet | undefined> {
 		return Promise.resolve(store.userTokens[sessionId]?.tokenSet);
 	},
-	setOidcTokenSet(sessionId: string, tokenSet: OidcTokenSet): Promise<void> {
+	setOidcTokenSet(sessionId: string, expiresInSeconds: number, tokenSet: OidcTokenSet): Promise<void> {
 		store.userTokens[sessionId] = { tokenSet };
-
-		const expiresInSeconds = getExpiresInSeconds(tokenSet.expiresAt);
 
 		setTimeout(() => {
 			delete store.userTokens[sessionId];
@@ -77,7 +95,7 @@ export const inMemorySessionStore: SessionStore = {
 			store.oboTokens[sessionId] = {};
 		}
 
-		const expiresInSeconds = getExpiresInSeconds(oboToken.expiresAt);
+		const expiresInSeconds = getSecondsUntil(oboToken.expiresAt);
 		const adjustedExpiresInSeconds = getAdjustedExpireInSeconds(expiresInSeconds);
 
 		store.oboTokens[sessionId][appIdentifier] = oboToken;

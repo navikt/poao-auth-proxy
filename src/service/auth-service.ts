@@ -3,7 +3,7 @@ import urlJoin from 'url-join';
 
 import { TokenXConfig } from '../config/auth-config';
 import {
-	createAzureAdAppIdFromClientId,
+	createAzureAdAppIdFromClientId, createNbf,
 	createScope,
 	JWKS,
 	OboToken,
@@ -12,6 +12,8 @@ import {
 } from '../utils/auth-utils';
 import { logger } from '../utils/logger';
 import { endsWithOneOf } from '../utils/url-utils';
+
+// TODO: Split up into multiple utils files. F.ex auth-client-utils, auth-token-utils ...
 
 export const ALLOWED_REDIRECT_HOSTNAMES = ['nav.no', 'localhost'];
 
@@ -108,7 +110,7 @@ export async function createAzureAdOnBehalfOfToken(
 		{
 			clientAssertionPayload: {
 				aud: client.issuer.metadata.token_endpoint,
-				nbf: Math.floor(Date.now() / 1000),
+				nbf: createNbf(),
 			},
 		}
 	);
@@ -138,7 +140,7 @@ export async function createTokenXOnBehalfOfToken(
 				sub: tokenXConfig.clientId,
 				iss: tokenXConfig.clientId,
 				aud: client.issuer.metadata.token_endpoint,
-				nbf: Math.floor(Date.now() / 1000),
+				nbf: createNbf(),
 			},
 		}
 	);
@@ -146,11 +148,11 @@ export async function createTokenXOnBehalfOfToken(
 	return tokenSetToOboToken(oboTokenSet);
 }
 
-export function getNewAccessTokenWithRefreshToken(client: Client, refreshToken: string): Promise<TokenSet> {
+export function fetchRefreshedTokenSet(client: Client, refreshToken: string): Promise<TokenSet> {
 	return client.refresh(refreshToken, {
 		clientAssertionPayload: {
 			aud: client.issuer.metadata.token_endpoint,
-			nbf: Math.floor(Date.now() / 1000),
+			nbf: createNbf(),
 		}
 	});
 }
@@ -160,7 +162,17 @@ export const isTokenValid = (tokenSet: OidcTokenSet | undefined): boolean => {
 		return false;
 	}
 
+	// TODO: Use isTokenExpiredOrSoonToBe
+
 	return tokenSet.expiresAt > new Date().getMilliseconds();
+};
+
+export const isTokenExpiredOrExpiresSoon = (tokenSet: OidcTokenSet | undefined, howSoonMs: number): boolean => {
+	if (!tokenSet) {
+		return true;
+	}
+
+	return tokenSet.expiresAt < new Date().getMilliseconds() - howSoonMs;
 };
 
 export const createLoginRedirectUrl = (applicationUrl: string, callbackPath: string): string => {
