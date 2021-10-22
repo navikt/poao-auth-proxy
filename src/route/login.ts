@@ -34,7 +34,7 @@ export const setupLoginRoute = (params: SetupLoginRouteParams): void => {
 	app.get(
 		'/oauth2/login',
 		asyncRoute(async (req, res) => {
-			const redirectUri = safeRedirectUri(appConfig.applicationUrl, req.query.redirect_uri as string | undefined);
+			const redirectUri = safeRedirectUri(appConfig.applicationUrl, req.query.redirect as string | undefined);
 			const userTokenSet = await sessionStore.getOidcTokenSet(req.sessionID);
 
 			if (isTokenValid(userTokenSet)) {
