@@ -65,14 +65,14 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 
 					const refreshAllowedWithin = await sessionStore.getRefreshAllowedWithin(req.sessionID);
 
-					if (!refreshAllowedWithin || Date.now() >= refreshAllowedWithin.getMilliseconds()) {
+					if (!refreshAllowedWithin || Date.now() >= refreshAllowedWithin.getTime()) {
 						return notAuthenticated(res);
 					}
 
 					const refreshedTokenSet = await fetchRefreshedTokenSet(authClient, userTokenSet.refreshToken);
 					userTokenSet = tokenSetToOidcTokenSet(refreshedTokenSet);
 
-					const expiresInSeconds = getSecondsUntil(refreshAllowedWithin.getMilliseconds());
+					const expiresInSeconds = getSecondsUntil(refreshAllowedWithin.getTime());
 					await sessionStore.setOidcTokenSet(req.sessionID, expiresInSeconds, userTokenSet);
 				}
 

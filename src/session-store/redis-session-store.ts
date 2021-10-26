@@ -78,7 +78,7 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 		setRefreshAllowedWithin(sessionId: string, expiresInSeconds: number, refreshAllowedWithin: Date): Promise<void> {
 			const key = createRefreshAllowedWithinEpochKey(sessionId);
 
-			return setexAsync(key, expiresInSeconds, refreshAllowedWithin.getMilliseconds().toString())
+			return setexAsync(key, expiresInSeconds, refreshAllowedWithin.getTime().toString())
 				.then(() => {})
 				.catch(() => {
 					logger.error('Failed to setRefreshAllowedWithin, key=' + key);

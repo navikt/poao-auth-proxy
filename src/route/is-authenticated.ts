@@ -44,13 +44,13 @@ export const setupIsAuthenticatedRoute = (params: SetupCallbackRouteParams): voi
 
 				const refreshAllowedWithin = await sessionStore.getRefreshAllowedWithin(req.sessionID);
 
-				if (!refreshAllowedWithin || Date.now() >= refreshAllowedWithin.getMilliseconds()) {
+				if (!refreshAllowedWithin || Date.now() >= refreshAllowedWithin.getTime()) {
 					return isAuthenticated(res, false);
 				}
 
 				const refreshedTokenSet = await fetchRefreshedTokenSet(authClient, userTokenSet.refreshToken);
 				const refreshedOidcTokenSet = tokenSetToOidcTokenSet(refreshedTokenSet);
-				const expiresInSeconds = getSecondsUntil(refreshAllowedWithin.getMilliseconds());
+				const expiresInSeconds = getSecondsUntil(refreshAllowedWithin.getTime());
 
 				await sessionStore.setOidcTokenSet(req.sessionID, expiresInSeconds, refreshedOidcTokenSet);
 			}

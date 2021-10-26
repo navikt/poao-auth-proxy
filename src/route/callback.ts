@@ -73,7 +73,7 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 
 					if (appConfig.auth.enableRefresh) {
 						const refreshAllowedWithin = getNowPlusSeconds(appConfig.auth.refreshAllowedWithinSeconds);
-						const secondsRefreshAllowed = getSecondsUntil(refreshAllowedWithin.getMilliseconds());
+						const secondsRefreshAllowed = getSecondsUntil(refreshAllowedWithin.getTime());
 
 						oidcTokenSetExpiresInSec = secondsRefreshAllowed;
 

@@ -31,7 +31,7 @@ export const isTokenExpiredOrExpiresSoon = (tokenSet: OidcTokenSet | undefined, 
 		return true;
 	}
 
-	return tokenSet.expiresAt < new Date().getMilliseconds() - howSoonMs;
+	return tokenSet.expiresAt < new Date().getTime() - howSoonMs;
 };
 
 export const getTokenSid = (jwtTokenStr: string): string | undefined => {
