@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+  poao-auth-proxy-redis:
+    image: 'bitnami/redis:6.2-debian-10'
+    container_name: poao-auth-proxy-redis
+    ports:
+      - '6379:6379'
+    environment:
+      - REDIS_PASSWORD=qwerty
+
