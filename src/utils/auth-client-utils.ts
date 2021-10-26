@@ -64,7 +64,7 @@ export function createIdPortenAuthorizationUrl(params: {
 		response_type: 'code',
 		code_challenge: params.codeChallenge,
 		code_challenge_method: 'S256',
-		scope: 'openid',
+		scope: 'openid', // Refresh token is provided without having to add additional scopes
 		redirect_uri: params.redirect_uri,
 		state: params.state,
 		nonce: params.nonce,

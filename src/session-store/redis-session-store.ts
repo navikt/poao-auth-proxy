@@ -42,107 +42,133 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 
 	return {
 		getLoginState(id: string): Promise<LoginState | undefined> {
-			return getAsync(createLoginStateKey(id))
+			const key = createLoginStateKey(id);
+
+			return getAsync(key)
 				.then((data) => {
 					return data ? JSON.parse(data) : undefined;
 				})
-				.catch((err) => {
-					logger.error(err);
+				.catch(() => {
+					logger.error('Failed to getLoginState, key=' + key);
 					return undefined;
 				});
 		},
 		setLoginState(id: string, expiresInSeconds: number, loginState: LoginState): Promise<void> {
-			return setexAsync(createLoginStateKey(id), expiresInSeconds, JSON.stringify(loginState))
+			const key = createLoginStateKey(id);
+
+			return setexAsync(key, expiresInSeconds, JSON.stringify(loginState))
 				.then(() => {})
-				.catch((err) => {
-					logger.error(err);
+				.catch(() => {
+					logger.error('Failed to setLoginState, key=' + key);
 				});
 		},
 
 		getRefreshAllowedWithin(sessionId: string): Promise<Date | undefined> {
-			return getAsync(createRefreshAllowedWithinEpochKey(sessionId))
+			const key = createRefreshAllowedWithinEpochKey(sessionId);
+
+			return getAsync(key)
 				.then((data) => {
 					return new Date(Number(data)) || undefined;
 				})
-				.catch((err) => {
-					logger.error(err);
+				.catch(() => {
+					logger.error('Failed to getRefreshAllowedWithin, key=' + key);
 					return undefined;
 				});
 		},
 		setRefreshAllowedWithin(sessionId: string, expiresInSeconds: number, refreshAllowedWithin: Date): Promise<void> {
-			return setexAsync(createRefreshAllowedWithinEpochKey(sessionId), expiresInSeconds, refreshAllowedWithin.getMilliseconds().toString())
+			const key = createRefreshAllowedWithinEpochKey(sessionId);
+
+			return setexAsync(key, expiresInSeconds, refreshAllowedWithin.getMilliseconds().toString())
 				.then(() => {})
-				.catch((err) => {
-					logger.error(err);
+				.catch(() => {
+					logger.error('Failed to setRefreshAllowedWithin, key=' + key);
 				});
 		},
 		destroyRefreshAllowedWithin(sessionId: string): Promise<void> {
-			return delAsync(createRefreshAllowedWithinEpochKey(sessionId)).catch((err) => {
-				logger.error(err);
+			const key = createRefreshAllowedWithinEpochKey(sessionId);
+
+			return delAsync(key).catch(() => {
+				logger.error('Failed to destroyRefreshAllowedWithin, key=' + key);
 			});
 		},
 
 		getLogoutSessionId(oidcSessionId: string): Promise<string | undefined> {
-			return getAsync(createAuthProviderSessionKey(oidcSessionId))
+			const key = createAuthProviderSessionKey(oidcSessionId);
+
+			return getAsync(key)
 				.then((data) => {
 					return data || undefined;
 				})
-				.catch((err) => {
-					logger.error(err);
+				.catch(() => {
+					logger.error('Failed to getLogoutSessionId, key=' + key);
 					return undefined;
 				});
 		},
 		setLogoutSessionId(oidcSessionId: string, expiresInSeconds: number, sessionId: string): Promise<void> {
-			return setexAsync(createAuthProviderSessionKey(oidcSessionId), expiresInSeconds, sessionId)
+			const key = createAuthProviderSessionKey(oidcSessionId);
+
+			return setexAsync(key, expiresInSeconds, sessionId)
 				.then(() => {})
-				.catch((err) => {
-					logger.error(err);
+				.catch(() => {
+					logger.error('Failed to setLogoutSessionId, key=' + key);
 				});
 		},
 		destroyLogoutSessionId(oidcSessionId: string): Promise<void> {
-			return delAsync(createAuthProviderSessionKey(oidcSessionId)).catch((err) => {
-				logger.error(err);
+			const key = createAuthProviderSessionKey(oidcSessionId);
+
+			return delAsync(key).catch(() => {
+				logger.error('Failed to destroyLogoutSessionId, key=' + key);
 			});
 		},
 
 		getOidcTokenSet(sessionId: string): Promise<OidcTokenSet | undefined> {
-			return getAsync(createOidcTokenSetKey(sessionId))
+			const key = createOidcTokenSetKey(sessionId);
+
+			return getAsync(key)
 				.then((data) => {
 					return data ? JSON.parse(data) : undefined;
 				})
-				.catch((err) => {
-					logger.error(err);
+				.catch(() => {
+					logger.error('Failed to getOidcTokenSet, key=' + key);
 					return undefined;
 				});
 		},
 		setOidcTokenSet(sessionId: string, expiresInSeconds: number, tokenSet: OidcTokenSet): Promise<void> {
-			return setexAsync(createOidcTokenSetKey(sessionId), expiresInSeconds, JSON.stringify(tokenSet))
+			const key = createOidcTokenSetKey(sessionId);
+
+			return setexAsync(key, expiresInSeconds, JSON.stringify(tokenSet))
 				.then(() => {})
-				.catch((err) => {
-					logger.error(err);
+				.catch(() => {
+					logger.error('Failed to setOidcTokenSet, key=' + key);
 				});
 		},
 		destroyOidcTokenSet(sessionId: string): Promise<void> {
-			return delAsync(createOidcTokenSetKey(sessionId)).catch((err) => {
-				logger.error(err);
+			const key = createOidcTokenSetKey(sessionId);
+
+			return delAsync(key).catch(() => {
+				logger.error('Failed to destroyOidcTokenSet, key=' + key);
 			});
 		},
 
 		getUserOboToken(sessionId: string, appIdentifier: string): Promise<OboToken | undefined> {
-			return getAsync(createOboTokenKey(sessionId, appIdentifier))
+			const key = createOboTokenKey(sessionId, appIdentifier);
+
+			return getAsync(key)
 				.then((data) => {
 					return data ? JSON.parse(data) : undefined;
 				})
-				.catch((err) => {
-					logger.error(err);
+				.catch(() => {
+					logger.error('Failed to getUserOboToken, key=' + key);
 					return undefined;
 				});
 		},
 		setUserOboToken(sessionId: string, appIdentifier: string, expiresInSeconds: number, oboToken: OboToken): Promise<void> {
-			return setexAsync(createOboTokenKey(sessionId, appIdentifier), expiresInSeconds, JSON.stringify(oboToken))
+			const key = createOboTokenKey(sessionId, appIdentifier);
+
+			return setexAsync(key, expiresInSeconds, JSON.stringify(oboToken))
 				.then(() => {})
-				.catch((err) => {
-					logger.error(err);
+				.catch(() => {
+					logger.error('Failed to setUserOboToken, key=' + key);
 				});
 		},
 	};
