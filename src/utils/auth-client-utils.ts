@@ -58,21 +58,13 @@ export function createIdPortenAuthorizationUrl(params: {
 	state: string;
 	nonce: string;
 	codeChallenge: string;
-	enableRefresh: boolean;
 }): string {
-
-	const scope = createScope([
-		'openid',
-		'profile',
-		params.enableRefresh ? 'offline_access' : undefined
-	]);
-
 	return params.client.authorizationUrl({
 		response_mode: 'form_post',
 		response_type: 'code',
 		code_challenge: params.codeChallenge,
 		code_challenge_method: 'S256',
-		scope: scope,
+		scope: 'openid',
 		redirect_uri: params.redirect_uri,
 		state: params.state,
 		nonce: params.nonce,
