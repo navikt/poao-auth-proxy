@@ -1,5 +1,6 @@
 import { TokenSet } from 'openid-client';
 import { assert, fromBase64 } from './index';
+import { EpochSecond } from './date-utils';
 
 // The tokens should be considered expired a bit before the actual expiration.
 // This is to prevent problems with clock skew and that the token might expire in-flight.
@@ -9,7 +10,7 @@ export const EXPIRE_BEFORE_MS = EXPIRE_BEFORE_SECONDS * 1000;
 export interface OidcTokenSet {
 	tokenType: string; // Always "Bearer"
 	scope: string; // Scopes (permissions) that the access_token has
-	expiresAt: number; // Epoch ms timestamp for expiration
+	expiresAt: EpochSecond; // Epoch seconds timestamp for expiration
 	accessToken: string;
 	idToken: string;
 	refreshToken?: string;
@@ -18,7 +19,7 @@ export interface OidcTokenSet {
 export interface OboToken {
 	tokenType: string; // Always "Bearer"
 	scope: string; // Scopes (permissions) that the OBO token has
-	expiresAt: number; // Epoch ms timestamp for expiration
+	expiresAt: EpochSecond; // Epoch seconds timestamp for expiration
 	accessToken: string; // The OBO token
 }
 
@@ -31,7 +32,7 @@ export const isTokenExpiredOrExpiresSoon = (tokenSet: OidcTokenSet | undefined, 
 		return true;
 	}
 
-	return tokenSet.expiresAt < new Date().getTime() - howSoonMs;
+	return tokenSet.expiresAt * 1000 < (new Date().getTime() - howSoonMs);
 };
 
 export const getTokenSid = (jwtTokenStr: string): string | undefined => {

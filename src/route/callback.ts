@@ -56,6 +56,7 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 				)
 				.then(async (tokenSet) => {
 					const oidcTokenSet = tokenSetToOidcTokenSet(tokenSet);
+					const tokenSetExpiresInSeconds = getSecondsUntil(oidcTokenSet.expiresAt * 1000)
 
 					if (appConfig.auth.loginProvider === LoginProvider.ID_PORTEN) {
 						const oidcSessionId = getTokenSid(oidcTokenSet.idToken);
@@ -64,9 +65,7 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 							throw new Error('"sid"-claim is missing from id_token');
 						}
 
-						const expiresInSeconds = getSecondsUntil(oidcTokenSet.expiresAt)
-
-						await sessionStore.setLogoutSessionId(oidcSessionId, expiresInSeconds, req.sessionID);
+						await sessionStore.setLogoutSessionId(oidcSessionId, tokenSetExpiresInSeconds, req.sessionID);
 					}
 
 					let oidcTokenSetExpiresInSec: number;
@@ -79,7 +78,7 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 
 						await sessionStore.setRefreshAllowedWithin(req.sessionID, secondsRefreshAllowed, refreshAllowedWithin);
 					} else {
-						oidcTokenSetExpiresInSec = getSecondsUntil(oidcTokenSet.expiresAt);
+						oidcTokenSetExpiresInSec = tokenSetExpiresInSeconds;
 					}
 
 					await sessionStore.setOidcTokenSet(req.sessionID, oidcTokenSetExpiresInSec, oidcTokenSet);
