@@ -64,7 +64,7 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 							throw new Error('"sid"-claim is missing from id_token');
 						}
 
-						const expiresInSeconds = getSecondsUntil(oidcTokenSet.expiresAt)
+						const expiresInSeconds = getSecondsUntil(oidcTokenSet.expiresAt * 1000)
 
 						await sessionStore.setLogoutSessionId(oidcSessionId, expiresInSeconds, req.sessionID);
 					}

@@ -1,6 +1,10 @@
 
-export const getSecondsUntil = (epoch: number): number => {
-	const msUntil = epoch - Date.now();
+export type EpochSecond = number;
+
+export type EpochMs = number;
+
+export const getSecondsUntil = (epochMs: EpochMs): number => {
+	const msUntil = epochMs - Date.now();
 
 	if (msUntil < 0) {
 		return 0;
@@ -11,7 +15,7 @@ export const getSecondsUntil = (epoch: number): number => {
 
 export const getNowPlusSeconds = (seconds: number): Date => {
 	const plusMs = seconds * 1000;
-	const nowEpoch = Date.now();
+	const nowEpochMs = Date.now();
 
-	return new Date(nowEpoch + plusMs);
+	return new Date(nowEpochMs + plusMs);
 };

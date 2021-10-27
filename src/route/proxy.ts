@@ -90,7 +90,7 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 
 					oboToken = await oboTokenPromise;
 
-					const expiresInSeconds = getSecondsUntil(oboToken.expiresAt);
+					const expiresInSeconds = getSecondsUntil(oboToken.expiresAt * 1000);
 					const expiresInSecondWithClockSkew = getExpiresInSecondWithClockSkew(expiresInSeconds);
 
 					await sessionStore.setUserOboToken(req.sessionID, appId, expiresInSecondWithClockSkew, oboToken);
