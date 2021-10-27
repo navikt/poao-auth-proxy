@@ -9,17 +9,9 @@ import { asyncMiddleware } from '../utils/express-utils';
 import { logger } from '../utils/logger';
 import { getSecondsUntil } from '../utils/date-utils';
 import { createAzureAdAppId, createTokenXAppId } from '../utils/auth-config-utils';
-import {
-	EXPIRE_BEFORE_MS,
-	getExpiresInSecondWithClockSkew,
-	isTokenExpiredOrExpiresSoon,
-	tokenSetToOidcTokenSet
-} from '../utils/auth-token-utils';
-import {
-	createAzureAdOnBehalfOfToken,
-	createTokenXOnBehalfOfToken,
-	fetchRefreshedTokenSet
-} from '../utils/auth-client-utils';
+import { getExpiresInSecondWithClockSkew } from '../utils/auth-token-utils';
+import { createAzureAdOnBehalfOfToken, createTokenXOnBehalfOfToken } from '../utils/auth-client-utils';
+import { getOidcTokenSetAndRefreshIfNecessary } from '../service/token-service';
 
 const PROXY_BASE_PATH = '/proxy';
 
@@ -34,8 +26,6 @@ interface SetupProxyRoutesParams {
 export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 	const { app, appConfig, sessionStore, authClient, oboTokenClient } = params;
 
-	const refreshEnabled = appConfig.auth.enableRefresh;
-
 	appConfig.proxy.proxies.forEach((proxy) => {
 		const proxyFrom = urlJoin(PROXY_BASE_PATH, proxy.fromPath);
 
@@ -43,37 +33,18 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 			? createTokenXAppId(proxy.toApp)
 			: createAzureAdAppId(proxy.toApp);
 
-		function notAuthenticated(res: Response) {
-			res.sendStatus(401);
-		}
-
 		app.use(
 			proxyFrom,
 			asyncMiddleware(async (req, res, next) => {
 				logger.info(`Proxyer request ${req.path} til applikasjon ${proxy.toApp.name}`);
 
-				let userTokenSet = await sessionStore.getOidcTokenSet(req.sessionID);
+				const userTokenSet = await getOidcTokenSetAndRefreshIfNecessary(
+					sessionStore, req.sessionID, appConfig.auth.enableRefresh, authClient
+				);
 
 				if (!userTokenSet) {
-					return notAuthenticated(res);
-				}
-
-				if (isTokenExpiredOrExpiresSoon(userTokenSet, EXPIRE_BEFORE_MS)) {
-					if (!refreshEnabled || !userTokenSet.refreshToken) {
-						return notAuthenticated(res);
-					}
-
-					const refreshAllowedWithin = await sessionStore.getRefreshAllowedWithin(req.sessionID);
-
-					if (!refreshAllowedWithin || Date.now() >= refreshAllowedWithin.getTime()) {
-						return notAuthenticated(res);
-					}
-
-					const refreshedTokenSet = await fetchRefreshedTokenSet(authClient, userTokenSet.refreshToken);
-					userTokenSet = tokenSetToOidcTokenSet(refreshedTokenSet);
-
-					const expiresInSeconds = getSecondsUntil(refreshAllowedWithin.getTime());
-					await sessionStore.setOidcTokenSet(req.sessionID, expiresInSeconds, userTokenSet);
+					res.sendStatus(401);
+					return;
 				}
 
 				let oboToken = await sessionStore.getUserOboToken(req.sessionID, appId);
@@ -81,11 +52,11 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 				if (!oboToken) {
 					const oboTokenPromise = appConfig.auth.tokenX
 						? createTokenXOnBehalfOfToken(
-								oboTokenClient,
-								appId,
-								userTokenSet.accessToken,
-								appConfig.auth.tokenX
-						  )
+							oboTokenClient,
+							appId,
+							userTokenSet.accessToken,
+							appConfig.auth.tokenX
+						)
 						: createAzureAdOnBehalfOfToken(oboTokenClient, appId, userTokenSet.accessToken);
 
 					oboToken = await oboTokenPromise;

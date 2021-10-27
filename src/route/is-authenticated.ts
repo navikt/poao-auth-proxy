@@ -1,12 +1,10 @@
-import express, { Response } from 'express';
+import express from 'express';
 import { Client } from 'openid-client';
 
 import { SessionStore } from '../session-store/session-store';
 import { asyncRoute } from '../utils/express-utils';
 import { AppConfig } from '../config/app-config-resolver';
-import { getSecondsUntil } from '../utils/date-utils';
-import { EXPIRE_BEFORE_MS, isTokenExpiredOrExpiresSoon, tokenSetToOidcTokenSet } from '../utils/auth-token-utils';
-import { fetchRefreshedTokenSet } from '../utils/auth-client-utils';
+import { getOidcTokenSetAndRefreshIfNecessary } from '../service/token-service';
 
 interface SetupCallbackRouteParams {
 	app: express.Application;
@@ -18,44 +16,26 @@ interface SetupCallbackRouteParams {
 export const setupIsAuthenticatedRoute = (params: SetupCallbackRouteParams): void => {
 	const { app, authClient, appConfig, sessionStore } = params;
 
-	const refreshEnabled = appConfig.auth.enableRefresh;
-
-	function isAuthenticated(res: Response, authenticated: boolean) {
-		res.setHeader('cache-control', 'no-cache');
-
-		res.send({
-			isAuthenticated: authenticated,
-		});
-	}
-
 	app.get(
 		'/is-authenticated',
 		asyncRoute(async (req, res) => {
-			const userTokenSet = await sessionStore.getOidcTokenSet(req.sessionID);
+			let isAuthenticated: boolean;
 
-			if (!userTokenSet) {
-				return isAuthenticated(res, false);
+			try {
+				const tokenSet = await getOidcTokenSetAndRefreshIfNecessary(
+					sessionStore, req.sessionID, appConfig.auth.enableRefresh, authClient
+				);
+
+				isAuthenticated = !!tokenSet;
+			} catch (e) {
+				isAuthenticated = false;
 			}
 
-			if (isTokenExpiredOrExpiresSoon(userTokenSet, EXPIRE_BEFORE_MS)) {
-				if (!refreshEnabled || !userTokenSet.refreshToken) {
-					return isAuthenticated(res, false);
-				}
+			res.setHeader('cache-control', 'no-cache');
 
-				const refreshAllowedWithin = await sessionStore.getRefreshAllowedWithin(req.sessionID);
-
-				if (!refreshAllowedWithin || Date.now() >= refreshAllowedWithin.getTime()) {
-					return isAuthenticated(res, false);
-				}
-
-				const refreshedTokenSet = await fetchRefreshedTokenSet(authClient, userTokenSet.refreshToken);
-				const refreshedOidcTokenSet = tokenSetToOidcTokenSet(refreshedTokenSet);
-				const expiresInSeconds = getSecondsUntil(refreshAllowedWithin.getTime());
-
-				await sessionStore.setOidcTokenSet(req.sessionID, expiresInSeconds, refreshedOidcTokenSet);
-			}
-
-			return isAuthenticated(res, true);
+			res.send({
+				isAuthenticated: isAuthenticated,
+			});
 		})
 	);
 };
