@@ -115,9 +115,9 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 
 			return setexAsync(key, expiresInSeconds, sessionId)
 				.then(() => {})
-				.catch(() => {
+				.catch((err) => {
 					const msg = 'Failed to setLogoutSessionId, key=' + key;
-
+					logger.error(JSON.stringify(err, ["message", "arguments", "type", "name"]));
 					logger.error(msg);
 					throw new Error(msg);
 				});

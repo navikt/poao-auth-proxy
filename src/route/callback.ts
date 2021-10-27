@@ -66,6 +66,9 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 
 						const expiresInSeconds = getSecondsUntil(oidcTokenSet.expiresAt)
 
+						logger.info('oidcSessionId: ' + oidcSessionId);
+						logger.info('expiresInSeconds: ' + expiresInSeconds);
+						logger.info('req.sessionID: ' + req.sessionID);
 						await sessionStore.setLogoutSessionId(oidcSessionId, expiresInSeconds, req.sessionID);
 					}
 
