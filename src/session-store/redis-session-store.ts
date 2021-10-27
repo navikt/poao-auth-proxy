@@ -59,7 +59,10 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 			return setexAsync(key, expiresInSeconds, JSON.stringify(loginState))
 				.then(() => {})
 				.catch(() => {
-					logger.error('Failed to setLoginState, key=' + key);
+					const msg = 'Failed to setLoginState, key=' + key;
+
+					logger.error(msg)
+					throw new Error(msg);
 				});
 		},
 
@@ -81,7 +84,10 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 			return setexAsync(key, expiresInSeconds, refreshAllowedWithin.getTime().toString())
 				.then(() => {})
 				.catch(() => {
-					logger.error('Failed to setRefreshAllowedWithin, key=' + key);
+					const msg = 'Failed to setRefreshAllowedWithin, key=' + key;
+
+					logger.error(msg);
+					throw new Error(msg);
 				});
 		},
 		destroyRefreshAllowedWithin(sessionId: string): Promise<void> {
@@ -110,7 +116,10 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 			return setexAsync(key, expiresInSeconds, sessionId)
 				.then(() => {})
 				.catch(() => {
-					logger.error('Failed to setLogoutSessionId, key=' + key);
+					const msg = 'Failed to setLogoutSessionId, key=' + key;
+
+					logger.error(msg);
+					throw new Error(msg);
 				});
 		},
 		destroyLogoutSessionId(oidcSessionId: string): Promise<void> {
@@ -139,7 +148,10 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 			return setexAsync(key, expiresInSeconds, JSON.stringify(tokenSet))
 				.then(() => {})
 				.catch(() => {
-					logger.error('Failed to setOidcTokenSet, key=' + key);
+					const msg = 'Failed to setOidcTokenSet, key=' + key;
+
+					logger.error(msg);
+					throw new Error(msg);
 				});
 		},
 		destroyOidcTokenSet(sessionId: string): Promise<void> {
@@ -168,7 +180,10 @@ export const createRedisSessionStore = (sessionStorageConfig: SessionStorageConf
 			return setexAsync(key, expiresInSeconds, JSON.stringify(oboToken))
 				.then(() => {})
 				.catch(() => {
-					logger.error('Failed to setUserOboToken, key=' + key);
+					const msg = 'Failed to setUserOboToken, key=' + key;
+
+					logger.error(msg);
+					throw new Error(msg);
 				});
 		},
 	};

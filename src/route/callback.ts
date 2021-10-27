@@ -34,7 +34,7 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 			const loginState = await sessionStore.getLoginState(params.state);
 
 			if (!loginState) {
-				logger.error('Fant ikke login state i callback');
+				logger.error('Fant ikke lagret login state i /callback for id: ' + params.state);
 				res.sendStatus(500);
 				return;
 			}
@@ -91,7 +91,7 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 				})
 				.catch((error) => {
 					logger.error('Feil ved callback', error);
-					res.status(500).send('An unexpected error happened logging in');
+					res.status(500).send('An unexpected error happened during login');
 				});
 		})
 	);
