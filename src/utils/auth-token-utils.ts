@@ -12,7 +12,7 @@ export interface OidcTokenSet {
 	scope: string; // Scopes (permissions) that the access_token has
 	expiresAt: EpochSecond; // Epoch seconds timestamp for expiration
 	accessToken: string;
-	idToken: string;
+	idToken?: string;
 	refreshToken?: string;
 }
 
@@ -73,7 +73,7 @@ export const tokenSetToOidcTokenSet = (tokenSet: TokenSet): OidcTokenSet => {
 		scope: assert(tokenSet.scope, 'Missing scope'),
 		expiresAt: assert(tokenSet.expires_at, 'Missing expires_at'),
 		accessToken: assert(tokenSet.access_token, 'Missing access_token'),
-		idToken: assert(tokenSet.id_token, 'Missing id_token'),
+		idToken: tokenSet.id_token,
 		refreshToken: tokenSet.refresh_token
 	};
 };

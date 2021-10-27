@@ -59,6 +59,10 @@ export const setupCallbackRoute = (params: SetupCallbackRouteParams): void => {
 					const tokenSetExpiresInSeconds = getSecondsUntil(oidcTokenSet.expiresAt * 1000)
 
 					if (appConfig.auth.loginProvider === LoginProvider.ID_PORTEN) {
+						if (!oidcTokenSet.idToken) {
+							throw new Error('id_token is missing from token set');
+						}
+
 						const oidcSessionId = getTokenSid(oidcTokenSet.idToken);
 
 						if (!oidcSessionId) {
