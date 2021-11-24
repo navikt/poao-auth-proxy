@@ -10,7 +10,6 @@ import { setupInternalRoutes } from './route/internal';
 import { setupIsAuthenticatedRoute } from './route/is-authenticated';
 import { setupLoginRoute } from './route/login';
 import { setupLogoutRoutes } from './route/logout';
-import { setupOboTestRoute } from './route/obo';
 import { setupProxyRoutes } from './route/proxy';
 import { inMemorySessionStore } from './session-store/in-memory-session-store';
 import { createRedisSessionStore } from './session-store/redis-session-store';
@@ -81,7 +80,6 @@ async function startServer(appConfig: AppConfig) {
 	setupLogoutRoutes({ app, sessionStore });
 
 	setupIsAuthenticatedRoute({ app, appConfig, authClient, sessionStore });
-	setupOboTestRoute({ app, appConfig, sessionStore, oboTokenClient });
 
 	setupProxyRoutes({ app, appConfig, sessionStore, authClient, oboTokenClient });
 
