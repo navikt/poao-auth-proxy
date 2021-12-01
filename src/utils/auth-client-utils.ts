@@ -1,8 +1,5 @@
-import { Client, Issuer, TokenSet } from 'openid-client';
-import {
-	createAzureAdAppIdFromClientId,
-	JWKS,
-} from './auth-config-utils';
+import { Client, Issuer } from 'openid-client';
+import { JWKS } from './auth-config-utils';
 import { TokenXConfig } from '../config/auth-config';
 import { createNbf, OboToken, tokenSetToOboToken } from './auth-token-utils';
 
@@ -20,55 +17,6 @@ export function createClient(issuer: Issuer<Client>, clientId: string, jwks: JWK
 		},
 		jwks
 	);
-}
-
-export function createAzureAdAuthorizationUrl(params: {
-	client: Client;
-	clientId: string;
-	redirect_uri: string;
-	state: string;
-	nonce: string;
-	codeChallenge: string;
-	enableRefresh: boolean;
-}): string {
-	const authProxyAppIdentifier = createAzureAdAppIdFromClientId(params.clientId);
-
-	const scope = createScope([
-		'openid',
-		'profile',
-		params.enableRefresh ? 'offline_access' : undefined,
-		authProxyAppIdentifier
-	]);
-
-	return params.client.authorizationUrl({
-		response_mode: 'form_post',
-		response_type: 'code',
-		code_challenge: params.codeChallenge,
-		code_challenge_method: 'S256',
-		scope: scope,
-		redirect_uri: params.redirect_uri,
-		state: params.state,
-		nonce: params.nonce,
-	});
-}
-
-export function createIdPortenAuthorizationUrl(params: {
-	client: Client;
-	redirect_uri: string;
-	state: string;
-	nonce: string;
-	codeChallenge: string;
-}): string {
-	return params.client.authorizationUrl({
-		response_mode: 'form_post',
-		response_type: 'code',
-		code_challenge: params.codeChallenge,
-		code_challenge_method: 'S256',
-		scope: 'openid', // Refresh token is provided without having to add additional scopes
-		redirect_uri: params.redirect_uri,
-		state: params.state,
-		nonce: params.nonce,
-	});
 }
 
 // Ex: appIdentifier = api://my-cluster.my-namespace.my-app-name/.default
@@ -127,15 +75,6 @@ export async function createTokenXOnBehalfOfToken(
 	);
 
 	return tokenSetToOboToken(oboTokenSet);
-}
-
-export function fetchRefreshedTokenSet(client: Client, refreshToken: string): Promise<TokenSet> {
-	return client.refresh(refreshToken, {
-		clientAssertionPayload: {
-			aud: client.issuer.metadata.token_endpoint,
-			nbf: createNbf(),
-		}
-	});
 }
 
 export const createScope = (scopes: (string | undefined | null)[]): string => {

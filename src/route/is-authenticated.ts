@@ -1,20 +1,16 @@
 import express from 'express';
-import { Client } from 'openid-client';
-
-import { SessionStore } from '../session-store/session-store';
 import { asyncRoute } from '../utils/express-utils';
-import { AppConfig } from '../config/app-config-resolver';
-import { getOidcTokenSetAndRefreshIfNecessary } from '../service/token-service';
+import { TokenValidator } from '../utils/token-validator';
+import { getAccessToken } from '../utils/auth-token-utils';
+import { logger } from '../utils/logger';
 
 interface SetupCallbackRouteParams {
 	app: express.Application;
-	appConfig: AppConfig;
-	authClient: Client;
-	sessionStore: SessionStore;
+	tokenValidator: TokenValidator;
 }
 
 export const setupIsAuthenticatedRoute = (params: SetupCallbackRouteParams): void => {
-	const { app, authClient, appConfig, sessionStore } = params;
+	const { app, tokenValidator } = params;
 
 	app.get(
 		'/is-authenticated',
@@ -22,12 +18,9 @@ export const setupIsAuthenticatedRoute = (params: SetupCallbackRouteParams): voi
 			let isAuthenticated: boolean;
 
 			try {
-				const tokenSet = await getOidcTokenSetAndRefreshIfNecessary(
-					sessionStore, req.sessionID, appConfig.auth.enableRefresh, authClient
-				);
-
-				isAuthenticated = !!tokenSet;
+				isAuthenticated = await tokenValidator.isValid(getAccessToken(req));
 			} catch (e) {
+				logger.error("Failed to validate token", e)
 				isAuthenticated = false;
 			}
 

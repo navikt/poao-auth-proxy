@@ -5,11 +5,8 @@ import session from 'express-session';
 
 import { AppConfig, createAppConfig, logAppConfig } from './config/app-config-resolver';
 import { StoreType } from './config/session-storage-config';
-import { setupCallbackRoute } from './route/callback';
 import { setupInternalRoutes } from './route/internal';
 import { setupIsAuthenticatedRoute } from './route/is-authenticated';
-import { setupLoginRoute } from './route/login';
-import { setupLogoutRoutes } from './route/logout';
 import { setupProxyRoutes } from './route/proxy';
 import { inMemorySessionStore } from './session-store/in-memory-session-store';
 import { createRedisSessionStore } from './session-store/redis-session-store';
@@ -17,6 +14,7 @@ import { createJWKS } from './utils/auth-config-utils';
 import { logger } from './utils/logger';
 import { errorHandler } from './middleware/error-handler';
 import { createClient, createIssuer } from './utils/auth-client-utils';
+import { createTokenValidator } from './utils/token-validator';
 
 const app: express.Application = express();
 
@@ -58,14 +56,18 @@ async function startServer(appConfig: AppConfig) {
 	);
 	app.use(errorHandler);
 
-	const authIssuer = await createIssuer(auth.discoveryUrl);
-	const authClient = createClient(authIssuer, auth.clientId, createJWKS(auth.privateJwk));
-	let oboTokenClient = authClient;
+	const tokenValidator = await createTokenValidator(auth.discoveryUrl, auth.clientId);
+
+	let oboTokenClient;
 
 	if (auth.tokenX) {
 		const tokenXIssuer = await createIssuer(auth.tokenX.discoveryUrl);
 
 		oboTokenClient = createClient(tokenXIssuer, auth.tokenX.clientId, createJWKS(auth.tokenX.privateJwk));
+	} else {
+		const authIssuer = await createIssuer(auth.discoveryUrl);
+
+		oboTokenClient = createClient(authIssuer, auth.clientId, createJWKS(auth.privateJwk))
 	}
 
 	const sessionStore =
@@ -75,13 +77,9 @@ async function startServer(appConfig: AppConfig) {
 
 	setupInternalRoutes(app);
 
-	setupLoginRoute({ app, appConfig, sessionStore, authClient });
-	setupCallbackRoute({ app, appConfig, sessionStore, authClient });
-	setupLogoutRoutes({ app, sessionStore });
+	setupIsAuthenticatedRoute({ app, tokenValidator });
 
-	setupIsAuthenticatedRoute({ app, appConfig, authClient, sessionStore });
-
-	setupProxyRoutes({ app, appConfig, sessionStore, authClient, oboTokenClient });
+	setupProxyRoutes({ app, appConfig, sessionStore, oboTokenClient, tokenValidator });
 
 	app.listen(appConfig.port, () => logger.info('Server started successfully'));
 }

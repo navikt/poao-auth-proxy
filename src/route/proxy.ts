@@ -1,4 +1,4 @@
-import express, { Response } from 'express';
+import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { Client } from 'openid-client';
 import urlJoin from 'url-join';
@@ -9,9 +9,9 @@ import { asyncMiddleware } from '../utils/express-utils';
 import { logger } from '../utils/logger';
 import { getSecondsUntil } from '../utils/date-utils';
 import { createAzureAdAppId, createTokenXAppId } from '../utils/auth-config-utils';
-import { getExpiresInSecondWithClockSkew } from '../utils/auth-token-utils';
+import { getExpiresInSecondWithClockSkew, getAccessToken } from '../utils/auth-token-utils';
 import { createAzureAdOnBehalfOfToken, createTokenXOnBehalfOfToken } from '../utils/auth-client-utils';
-import { getOidcTokenSetAndRefreshIfNecessary } from '../service/token-service';
+import { TokenValidator } from '../utils/token-validator';
 
 const PROXY_BASE_PATH = '/proxy';
 
@@ -19,12 +19,12 @@ interface SetupProxyRoutesParams {
 	app: express.Application;
 	appConfig: AppConfig;
 	sessionStore: SessionStore;
-	authClient: Client;
 	oboTokenClient: Client;
+	tokenValidator: TokenValidator;
 }
 
 export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
-	const { app, appConfig, sessionStore, authClient, oboTokenClient } = params;
+	const { app, appConfig, sessionStore, oboTokenClient, tokenValidator } = params;
 
 	appConfig.proxy.proxies.forEach((proxy) => {
 		const proxyFrom = urlJoin(PROXY_BASE_PATH, proxy.fromPath);
@@ -38,11 +38,11 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 			asyncMiddleware(async (req, res, next) => {
 				logger.info(`Proxyer request ${req.path} til applikasjon ${proxy.toApp.name}`);
 
-				const userTokenSet = await getOidcTokenSetAndRefreshIfNecessary(
-					sessionStore, req.sessionID, appConfig.auth.enableRefresh, authClient
-				);
+				const accessToken = getAccessToken(req);
 
-				if (!userTokenSet) {
+				const isValid = await tokenValidator.isValid(accessToken);
+
+				if (!isValid) {
 					res.sendStatus(401);
 					return;
 				}
@@ -54,10 +54,10 @@ export const setupProxyRoutes = (params: SetupProxyRoutesParams): void => {
 						? createTokenXOnBehalfOfToken(
 							oboTokenClient,
 							appId,
-							userTokenSet.accessToken,
+							accessToken!!,
 							appConfig.auth.tokenX
 						)
-						: createAzureAdOnBehalfOfToken(oboTokenClient, appId, userTokenSet.accessToken);
+						: createAzureAdOnBehalfOfToken(oboTokenClient, appId, accessToken!!);
 
 					oboToken = await oboTokenPromise;
 

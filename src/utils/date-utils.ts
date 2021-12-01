@@ -12,10 +12,3 @@ export const getSecondsUntil = (epochMs: EpochMs): number => {
 
 	return Math.ceil(msUntil / 1000);
 };
-
-export const getNowPlusSeconds = (seconds: number): Date => {
-	const plusMs = seconds * 1000;
-	const nowEpochMs = Date.now();
-
-	return new Date(nowEpochMs + plusMs);
-};
