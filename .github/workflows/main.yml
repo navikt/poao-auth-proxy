@@ -1,7 +1,7 @@
 name: Build and push to registry
 on: push
 env:
-  IMAGE_TAG: ${{ github.sha }}
+  IMAGE_TAG: wonderwall-${{ github.sha }}
   IMAGE: ghcr.io/${{ github.repository }}/poao-auth-proxy
 
 jobs:
@@ -11,22 +11,12 @@ jobs:
     if: github.ref != 'refs/heads/main'
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+          node-version: '14'
+          cache: 'npm'
       - name: Install dependencies
         run: npm ci
       - name: Run tests
@@ -35,25 +25,15 @@ jobs:
   test-build-and-push:
     name: Build and push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/wonderwall'
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
       - name: Setup node
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+          node-version: '14'
+          cache: 'npm'
       - name: Install dependencies
         run: npm ci
       - name: Run tests
