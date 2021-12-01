@@ -3,26 +3,13 @@
 Generisk auth proxy + innloggingstjeneste for Azure AD og ID-porten+TokenX ved bruk av 
 phantom token pattern (https://curity.io/resources/learn/phantom-token-pattern).
 
-Auth proxyen implementerer OAuth2 on-behalf-of flyten for konfigurerte proxy endepunkter 
-og vil bytte ut access-token fra OIDC provideren med et nytt access-token som er scopet til en gitt backend.
+Auth proxyen bygger videre på **https://github.com/nais/wonderwall**.
+Innlogging og utlogging vil utført av Wonderwall. Når kall gjøres til tjenester som ligger bak /proxy 
+så vil poao-auth-proxy bytte ut tokenet fra Wonderwall med et on-behalf-of token som vil bli sendt videre til tjenesten bak.
 
-## Endpoints
+## Ekstra endepunkter
 
-**GET /oauth2/login?redirect_uri=...**
-
-Brukes for å starte login flyten. Hvis bruker ikke er logget inn så vil de bli redirectet til OIDC provideren for å logge seg inn.
-Etter innloggingsflyten er ferdig vil bruker bli redirectet til redirect_uri.
-Hvis bruker er logget inn allerede så vil de bli sendt til redirect_uri direkte.
-
-
-**GET /oauth2/callback**
-
-Brukes av OIDC provider som en del av login flyten.
-
-**GET /oauth2/logout**
-
-Brukes for å logge ut bruker. Sesjonen til bruker vil bli fjernet når endepunktet er kallet.
-Endepunktet kan også brukes av ID-porten for frontchannel logout hvis ID-porten er valgt som AUTH_LOGIN_PROVIDER.
+I tillegg til endepunktene fra Wonderwall så eksponeres:
 
 **GET /is-authenticated**
 
@@ -100,11 +87,15 @@ spec:
       memory: 128Mi
   idporten: # Required when AUTH_LOGIN_PROVIDER=ID_PORTEN
     enabled: true
+    sidecar:
+      enabled: true
   tokenx: # Required when AUTH_LOGIN_PROVIDER=ID_PORTEN
     enabled: true
   azure: # Required when AUTH_LOGIN_PROVIDER=AZURE_AD
-      application:
-        enabled: true
+    sidecar:
+      enabled: true
+    application:
+      enabled: true
   accessPolicy:
     inbound:
       rules:
@@ -129,6 +120,9 @@ spec:
     - name: SESSION_COOKIE_DOMAIN
       value: nav.no
 ```
+
+Hvis man ønsker å lagre OBO-tokens i Redis, så må man sette `SESSION_STORAGE_STORE_TYPE=REDIS` samt opprette en 
+Redis instanse slik som beskrevet i YAMLen nedenfor. Det er også mulig å bruke `SESSION_STORAGE_STORE_TYPE=IN_MEMORY` for å lagre tokens i minnet pr auth proxy instanse.
 
 ```yaml
 apiVersion: "nais.io/v1alpha1"
