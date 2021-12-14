@@ -1,5 +1,7 @@
 # Produktområde Arbeidsoppfølging (POAO) Auth Proxy
 
+NB: Dette prosjektet har blitt arkivert og videreført i https://github.com/navikt/poao-frontend.
+
 Generisk auth proxy + innloggingstjeneste for Azure AD og ID-porten+TokenX ved bruk av 
 phantom token pattern (https://curity.io/resources/learn/phantom-token-pattern).
 
